@@ -162,12 +162,16 @@ public class TaskManager {
         return true;
     }
 
-    public static void getSubtasks(int id) {
-        if (epics.get(id).subtasks.isEmpty()) {
+    public static void getSubtasks(int epicId) {
+        if (epics.get(epicId).subtasks.isEmpty()) {
             System.out.println("В этом эпике саб-задач нет!");
             return;
         }
-        System.out.println(epics.get(id).subtasks);
+        Epic epic = epics.get(epicId);
+
+        System.out.println("Эпик \"" + epic.getName() + "\" содержит в себе " + epic.getSubtasks().size() + " " +
+                "саб-задачи: ");
+        System.out.println(epics.get(epicId).subtasks);
     }
 
     public static void updateSubFill(int id, String newName, String newDescription) {

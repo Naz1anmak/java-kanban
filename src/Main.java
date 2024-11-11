@@ -7,8 +7,15 @@ public class Main {
 
         while (true) {
             printMenu();
+
+            if (!scanner.hasNextInt()) {
+                System.out.println("Введена неверная команда. Завершение программы.");
+                break;
+            }
+
             int code = scanner.nextInt();
             scanner.nextLine();
+
             switch (code) {
                 case 1:
                     TaskManager.addNewTask(new Task("Первая", "Описание 1"));
@@ -178,6 +185,7 @@ public class Main {
                     TaskManager.deleteAllEpics();
                     break;
                 default:
+                    System.out.println("Введена неверная команда. Завершение программы.");
                     return;
             }
         }
