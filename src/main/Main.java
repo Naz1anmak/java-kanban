@@ -8,7 +8,6 @@ import task.TaskStatus;
 
 import java.util.ArrayList;
 
-
 public class Main {
 
     public static void main(String[] args) {
@@ -45,8 +44,11 @@ public class Main {
         System.out.println(taskManager.getTasks());
 
         System.out.println(" ".repeat(18) + "***  Проверка обновления саб-задачи  ***");
+        System.out.println(taskManager.getEpics());
+        System.out.println(taskManager.getSubtasks(3));
         Subtask subtask = new Subtask(3, 5, "Четвертая саб-таска", "Обновленная", TaskStatus.DONE);
         taskManager.updateSub(subtask);
+        System.out.println(taskManager.getSubtasks(3));
         System.out.println(taskManager.getEpics());
 
         System.out.println(" ".repeat(18) + "***  Проверка удаления задачи  ***");
