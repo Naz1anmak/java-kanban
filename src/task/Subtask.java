@@ -1,17 +1,10 @@
 package task;
 
 public class Subtask extends Task {
-    private final int idEpic;
-    private TaskStatus status;
+    private int idEpic;
 
     public Subtask(int idEpic, String name, String description, TaskStatus status) {
-        super(idEpic, name, description);
-        this.status = status;
-        this.idEpic = idEpic;
-    }
-
-    public Subtask(int idEpic, int id, String name, String description, TaskStatus status) {
-        super(id, name, description);
+        super(name, description);
         this.status = status;
         this.idEpic = idEpic;
     }
@@ -20,9 +13,8 @@ public class Subtask extends Task {
         return idEpic;
     }
 
-    @Override
-    public TaskStatus getStatus() {
-        return status;
+    public void setIdEpic(int newIdEpic) {
+        this.idEpic = newIdEpic;
     }
 
     @Override

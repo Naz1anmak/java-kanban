@@ -8,15 +8,26 @@ public class Task {
     private int id;
     protected TaskStatus status;
 
-    public Task(int idTask, String name, String description, TaskStatus status) {
-        this.id = idTask;
+    public Task(int id, String name, String description, TaskStatus status) {
+        this.name = name;
+        this.description = description;
+        this.id = id;
+        this.status = status;
+    }
+
+    public Task(String name, String description, TaskStatus status) {
         this.name = name;
         this.description = description;
         this.status = status;
     }
 
-    protected Task(int idEpic, String name, String description) {
-        this.id = idEpic;
+    protected Task(int id, String name, String description) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+    }
+
+    protected Task(String name, String description) {
         this.name = name;
         this.description = description;
     }
