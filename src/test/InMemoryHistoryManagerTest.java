@@ -1,8 +1,7 @@
 package test;
 
-import manager.HistoryManager;
+import history.HistoryManager;
 import manager.Managers;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.Epic;
 import task.Subtask;
@@ -14,17 +13,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryHistoryManagerTest {
-    private HistoryManager historyManager;
+    private final HistoryManager historyManager = Managers.getDefaultHistory();
 
-    @BeforeEach
-    public void beforeEach() {
-        historyManager = Managers.getDefaultHistory();
-    }
+    Task task = new Task("Первая", "Описание 1", TaskStatus.NEW);
 
     @Test
     void add() {
-        Task task = new Task("Первая", "Описание 1", TaskStatus.NEW);
-
         Epic epic = new Epic("Первый эпик", "Описание 1");
 
         Subtask subtask = new Subtask(epic.getId(),
@@ -44,15 +38,12 @@ class InMemoryHistoryManagerTest {
 
     @Test
     public void shouldPreserveTaskDataInHistory() {
-        Task task = new Task("Задача", "Описание задачи", TaskStatus.NEW);
-
         historyManager.add(task);
-
         List<Task> history = historyManager.getHistory();
         Task taskFromHistory = history.getFirst();
 
-        assertEquals("Задача", taskFromHistory.getName());
-        assertEquals("Описание задачи", taskFromHistory.getDescription());
+        assertEquals("Первая", taskFromHistory.getName());
+        assertEquals("Описание 1", taskFromHistory.getDescription());
         assertEquals(TaskStatus.NEW, taskFromHistory.getStatus());
     }
 }

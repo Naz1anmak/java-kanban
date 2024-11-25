@@ -1,25 +1,26 @@
 package manager;
 
+import history.HistoryManager;
 import task.Task;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private final List<Task> history = new ArrayList<>(10);
+    private final List<Task> history = new LinkedList<>();
+    private final int MAX_HISTORY_SIZE = 10;
 
     public void add(Task task) {
-        if (history.size() == 10) {
-            history.removeFirst();
-            history.add(task);
-            return;
-        }
         history.add(task);
+
+        if (history.size() > MAX_HISTORY_SIZE) {
+            history.removeFirst();
+        }
     }
 
     @Override
     public List<Task> getHistory() {
         System.out.println("История просмотров: ");
-        return history;
+        return List.copyOf(history);
     }
 }

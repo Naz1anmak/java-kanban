@@ -1,6 +1,5 @@
 package test;
 
-import manager.HistoryManager;
 import manager.Managers;
 import manager.TaskManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +62,10 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testAddAndGetSubtasks() {
-        testAddAndGetEpics();
+        Epic epic1 = new Epic("Первый эпик", "Описание 1");
+        Epic epic2 = new Epic("Второй эпик", "Описание 2");
+        taskManager.addNewEpic(epic1);
+        taskManager.addNewEpic(epic2);
 
         Subtask subtask1 = new Subtask(taskManager.getEpics().getFirst().getId(),
                 "Первая саб-таска", "Описание1", TaskStatus.NEW);
@@ -115,20 +117,6 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    void shouldReturnInitializedTaskManager() {
-        TaskManager taskManager = Managers.getDefault();
-        assertNotNull(taskManager,
-                "Метод getDefault() должен возвращать проинициализированный экземпляр TaskManager.");
-    }
-
-    @Test
-    void shouldReturnInitializedHistoryManager() {
-        HistoryManager historyManager = Managers.getDefaultHistory();
-        assertNotNull(historyManager,
-                "Метод getDefaultHistory() должен возвращать проинициализированный экземпляр HistoryManager.");
-    }
-
-    @Test
     void shouldNotConflictBetweenManuallySetAndGeneratedIds() {
         Task manualIdTask = new Task("Первая", "Описание 1", TaskStatus.NEW);
         manualIdTask.setId(5);
@@ -152,5 +140,20 @@ public class InMemoryTaskManagerTest {
         assertEquals(copyTask.getName(), originalTask.getName());
         assertEquals(copyTask.getDescription(), originalTask.getDescription());
         assertEquals(copyTask.getStatus(), originalTask.getStatus());
+    }
+
+    @Test
+    void testUpdateEpic() {
+        Epic epic = new Epic("Первый эпик", "Описание 1");
+        taskManager.addNewEpic(epic);
+
+        Epic epicUpdate = new Epic("Второй эпик", "Описание 2");
+        final int epicIdUpdate = taskManager.addNewEpic(epicUpdate);
+
+        taskManager.updateEpicFill(epicUpdate);
+
+        Epic epicAfterUpdate = taskManager.getEpic(epicIdUpdate);
+
+        assertEquals(epicUpdate, epicAfterUpdate, "Эпики не совпадают.");
     }
 }
