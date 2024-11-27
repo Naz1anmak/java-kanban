@@ -14,8 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryHistoryManagerTest {
     private final HistoryManager historyManager = Managers.getDefaultHistory();
-
-    Task task = new Task("Первая", "Описание 1", TaskStatus.NEW);
+    private final Task task = new Task("Первая", "Описание 1", TaskStatus.NEW);
 
     @Test
     void add() {

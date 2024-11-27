@@ -16,10 +16,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class InMemoryTaskManagerTest {
     private TaskManager taskManager;
+    Epic epic1;
+    int epic1Id;
+    Epic epic2;
 
     @BeforeEach
-    public void beforeEach() {
+    void BeforeEach() {
         taskManager = Managers.getDefault();
+        epic1 = new Epic("Первый эпик", "Описание 1");
+        epic1Id = taskManager.addNewEpic(epic1);
+        epic2 = new Epic("Второй эпик", "Описание 2");
+        taskManager.addNewEpic(epic2);
     }
 
     @Test
@@ -43,15 +50,10 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testAddAndGetEpics() {
-        Epic epic1 = new Epic("Первый эпик", "Описание 1");
-        final int epicId = taskManager.addNewEpic(epic1);
-        final Epic savedEpic = taskManager.getEpic(epicId);
+        final Epic savedEpic = taskManager.getEpic(epic1Id);
 
         assertNotNull(savedEpic, "Эпик не найден.");
         assertEquals(epic1, savedEpic, "Эпики не совпадают.");
-
-        Epic epic2 = new Epic("Второй эпик", "Описание 2");
-        taskManager.addNewEpic(epic2);
 
         final List<Epic> epics = taskManager.getEpics();
 
@@ -62,11 +64,6 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testAddAndGetSubtasks() {
-        Epic epic1 = new Epic("Первый эпик", "Описание 1");
-        Epic epic2 = new Epic("Второй эпик", "Описание 2");
-        taskManager.addNewEpic(epic1);
-        taskManager.addNewEpic(epic2);
-
         Subtask subtask1 = new Subtask(taskManager.getEpics().getFirst().getId(),
                 "Первая саб-таска", "Описание1", TaskStatus.NEW);
         final int subtasksId = taskManager.addNewSubtask(subtask1);
@@ -91,11 +88,8 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void shouldNotAllowEpicToBeItsOwnSubtask() {
-        Epic epic = new Epic("Первый эпик", "Описание 1");
-        int epicId = taskManager.addNewEpic(epic);
-
-        Subtask invalidSubtask = new Subtask(epicId, "Некорректная саб-таска", "Описание", TaskStatus.NEW);
-        invalidSubtask.setId(epicId);
+        Subtask invalidSubtask = new Subtask(epic1Id, "Некорректная саб-таска", "Описание", TaskStatus.NEW);
+        invalidSubtask.setId(epic1Id);
         int result = taskManager.addNewSubtask(invalidSubtask);
 
         assertEquals(-1, result, "Эпик не должен добавляться как собственная подзадача.");
@@ -104,9 +98,6 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void shouldNotAllowSubtaskToBeItsOwnEpic() {
-        Epic epic = new Epic("Первый эпик", "Описание 1");
-        taskManager.addNewEpic(epic);
-
         Subtask subtask = new Subtask(1,
                 "Первая саб-таска", "Описание1", TaskStatus.NEW);
         subtask.setIdEpic(subtask.getId());
@@ -144,9 +135,6 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testUpdateEpic() {
-        Epic epic = new Epic("Первый эпик", "Описание 1");
-        taskManager.addNewEpic(epic);
-
         Epic epicUpdate = new Epic("Второй эпик", "Описание 2");
         final int epicIdUpdate = taskManager.addNewEpic(epicUpdate);
 

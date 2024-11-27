@@ -1,7 +1,5 @@
 package main;
 
-import history.HistoryManager;
-import manager.InMemoryTaskManager;
 import manager.Managers;
 import manager.TaskManager;
 import task.Epic;
@@ -14,8 +12,7 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        HistoryManager historyManager = Managers.getDefaultHistory();
-        TaskManager taskManager = new InMemoryTaskManager(historyManager);
+        TaskManager taskManager = Managers.getDefault();
 
         System.out.println(" ".repeat(18) + "***  Проверка создания задач и вывод ***");
         Task task1 = new Task("Первая", "Описание 1", TaskStatus.NEW);
@@ -66,10 +63,5 @@ public class Main {
         System.out.println(" ".repeat(18) + "***  Проверка удаления эпика  ***");
         taskManager.deleteEpicById(taskManager.getEpics().getFirst().getId());
         System.out.println(taskManager.getEpics());
-
-        System.out.println(" ".repeat(18) + "***  Проверка вывода истории просмотра задач  ***");
-        System.out.println(taskManager.getTask(1000000));
-        System.out.println(taskManager.getTask(taskManager.getTasks().getFirst().getId()));
-        System.out.println(historyManager.getHistory());
     }
 }
