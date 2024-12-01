@@ -16,9 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class InMemoryTaskManagerTest {
     private TaskManager taskManager;
-    Epic epic1;
-    int epic1Id;
-    Epic epic2;
+    private Epic epic1;
+    private int epic1Id;
+    private Epic epic2;
 
     @BeforeEach
     void BeforeEach() {
