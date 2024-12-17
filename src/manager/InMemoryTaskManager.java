@@ -53,6 +53,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteTaskById(int id) {
         Task task = tasks.remove(id);
         String name = task.getName();
+        historyManager.remove(id);
         System.out.println("Задача \"" + name + "\" удалена!");
     }
 
@@ -117,11 +118,18 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteEpicById(int id) {
-        for (int subtaskId : epics.get(id).getSubtaskIds()) {
-            subtasks.remove(subtaskId);
+        Epic epic = epics.get(id);
+        if (epic == null) return;
+
+        List<Integer> subtasksIds = new ArrayList<>(epic.getSubtaskIds());
+
+        for (int subtaskId : subtasksIds) {
+            deleteSubtaskById(subtaskId);
         }
+
         String name = epics.get(id).getName();
         epics.remove(id);
+        historyManager.remove(id);
 
         System.out.println("Эпик \"" + name + "\" и его саб-задачи удалены!");
     }
@@ -229,6 +237,9 @@ public class InMemoryTaskManager implements TaskManager {
                 epic.removeSubtaskId(id);
                 updateEpicStatus(epic);
             }
+
+            historyManager.remove(id);
+
             System.out.println("Саб-задача \"" + subtask.getName() + "\" удалена!");
         } else {
             System.out.println("Саб-задача с id " + id + " не найдена.");
@@ -243,5 +254,10 @@ public class InMemoryTaskManager implements TaskManager {
             updateEpicStatus(epic);
         }
         System.out.println("Все саб-задачи удалены!");
+    }
+
+    @Override
+    public List<Task> getHistory() {
+        return historyManager.getHistory();
     }
 }
