@@ -122,7 +122,7 @@ public class InMemoryTaskManagerTest {
     @Test
     void shouldNotConflictBetweenManuallySetAndGeneratedIds() {
         Task manualIdTask = new Task("Первая", "Описание 1", TaskStatus.NEW);
-        int taskId1 =taskManager.addNewTask(manualIdTask);
+        int taskId1 = taskManager.addNewTask(manualIdTask);
 
         Task generateIdTask = new Task("Вторая", "Описание 2", TaskStatus.DONE);
         int taskId2 = taskManager.addNewTask(generateIdTask);
