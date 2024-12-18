@@ -20,7 +20,7 @@ public class InMemoryTaskManagerTest {
     private Epic epic2;
 
     @BeforeEach
-    void BeforeEach() {
+    void beforeEach() {
         taskManager = Managers.getDefault();
         epic1 = new Epic("Первый эпик", "Описание 1");
         epic1Id = taskManager.addNewEpic(epic1);

@@ -20,7 +20,7 @@ class InMemoryHistoryManagerTest {
     private Subtask subtask;
 
     @BeforeEach
-    void BeforeEach() {
+    void beforeEach() {
         task = new Task("Первая", "Описание 1", TaskStatus.NEW);
         epic = new Epic("Первый эпик", "Описание 1");
         subtask = new Subtask(epic.getId(),
