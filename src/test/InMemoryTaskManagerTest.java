@@ -11,8 +11,7 @@ import task.TaskStatus;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class InMemoryTaskManagerTest {
     private TaskManager taskManager;
@@ -36,7 +35,9 @@ public class InMemoryTaskManagerTest {
         final Task savedTask = taskManager.getTask(taskId);
 
         assertNotNull(savedTask, "Задача не найдена.");
-        assertEquals(task1, savedTask, "Задачи не совпадают.");
+        assertEquals(task1.getName(), savedTask.getName(), "Названия задач не совпадают.");
+        assertEquals(task1.getDescription(), savedTask.getDescription(), "Описания задач не совпадают.");
+        assertEquals(task1.getStatus(), savedTask.getStatus(), "Статусы задач не совпадают.");
 
         Task task2 = new Task("Вторая", "Описание 2", TaskStatus.DONE);
         taskManager.addNewTask(task2);
@@ -45,7 +46,7 @@ public class InMemoryTaskManagerTest {
 
         assertNotNull(tasks, "Задачи не возвращаются.");
         assertEquals(2, tasks.size(), "Должны быть две задачи.");
-        assertEquals(task1, tasks.getFirst(), "Задачи не совпадают.");
+        assertEquals(task1.getName(), tasks.getFirst().getName(), "Названия первой задачи не совпадают.");
     }
 
     @Test
@@ -53,13 +54,14 @@ public class InMemoryTaskManagerTest {
         final Epic savedEpic = taskManager.getEpic(epic1Id);
 
         assertNotNull(savedEpic, "Эпик не найден.");
-        assertEquals(epic1, savedEpic, "Эпики не совпадают.");
+        assertEquals(epic1.getName(), savedEpic.getName(), "Названия эпиков не совпадают.");
+        assertEquals(epic1.getDescription(), savedEpic.getDescription(), "Описания эпиков не совпадают.");
 
         final List<Epic> epics = taskManager.getEpics();
 
         assertNotNull(epics, "Эпики не возвращаются.");
         assertEquals(2, epics.size(), "Должны быть два эпика.");
-        assertEquals(epic1, epics.getFirst(), "Эпики не совпадают.");
+        assertEquals(epic1.getName(), epics.getFirst().getName(), "Названия первого эпика не совпадают.");
     }
 
     @Test
@@ -83,7 +85,8 @@ public class InMemoryTaskManagerTest {
 
         assertNotNull(subtasks, "Саб-задачи не возвращаются.");
         assertEquals(3, subtasks.size(), "Должны быть три подзадачи.");
-        assertEquals(subtask1, subtasks.getFirst(), "Саб-задачи не совпадают.");
+        assertEquals(subtask1.getName(), subtasks.getFirst().getName(),
+                "Названия первой саб-задачи не совпадают.");
     }
 
     @Test
@@ -108,17 +111,26 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
+    void shouldNotAllowSubtaskWithInvalidEpicId() {
+        Subtask subtask = new Subtask(999, "Сабтаска", "Описание", TaskStatus.NEW);
+        int result = taskManager.addNewSubtask(subtask);
+
+        assertEquals(-1, result, "Саб-таска с несуществующим эпиком не должна добавляться.");
+        assertTrue(taskManager.getSubtasks().isEmpty(), "Список саб-тасок должен быть пустым.");
+    }
+
+    @Test
     void shouldNotConflictBetweenManuallySetAndGeneratedIds() {
         Task manualIdTask = new Task("Первая", "Описание 1", TaskStatus.NEW);
-        manualIdTask.setId(5);
-        taskManager.addNewTask(manualIdTask);
-        int taskId1 = manualIdTask.getId();
+        int taskId1 =taskManager.addNewTask(manualIdTask);
 
         Task generateIdTask = new Task("Вторая", "Описание 2", TaskStatus.DONE);
         int taskId2 = taskManager.addNewTask(generateIdTask);
 
-        assertEquals(manualIdTask, taskManager.getTask(taskId1));
-        assertEquals(generateIdTask, taskManager.getTask(taskId2));
+        assertEquals("Первая", taskManager.getTask(taskId1).getName(),
+                "Название первой задачи не совпадает.");
+        assertEquals("Вторая", taskManager.getTask(taskId2).getName(),
+                "Название второй задачи не совпадает.");
     }
 
     @Test
@@ -135,13 +147,88 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testUpdateEpic() {
-        Epic epicUpdate = new Epic("Второй эпик", "Описание 2");
+        Epic epicUpdate = new Epic("Третий эпик", "Описание 3");
         final int epicIdUpdate = taskManager.addNewEpic(epicUpdate);
 
         taskManager.updateEpicFill(epicUpdate);
 
         Epic epicAfterUpdate = taskManager.getEpic(epicIdUpdate);
 
-        assertEquals(epicUpdate, epicAfterUpdate, "Эпики не совпадают.");
+        assertEquals(epicUpdate.getName(), epicAfterUpdate.getName(),
+                "Эпики не совпадают по названию.");
+        assertEquals(epicUpdate.getDescription(), epicAfterUpdate.getDescription(),
+                "Эпики не совпадают по описанию");
+        assertEquals(epicUpdate.getStatus(), epicAfterUpdate.getStatus(),
+                "Эпики не совпадают по статусу");
+        assertEquals(epicUpdate.getSubtaskIds(), epicAfterUpdate.getSubtaskIds(),
+                "Саб-задачи эпиков не совпадают");
+    }
+
+    @Test
+    void shouldRemoveSubtaskAndClearItsIdFromEpic() {
+        Subtask subtask = new Subtask(epic1Id, "Первая саб-таска", "Описание", TaskStatus.NEW);
+        int subtaskId = taskManager.addNewSubtask(subtask);
+
+        Epic epicBeforeDelete = taskManager.getEpic(epic1Id);
+        assertTrue(epicBeforeDelete.getSubtaskIds().contains(subtaskId),
+                "ID сабтаски должен быть в эпике.");
+
+        taskManager.deleteSubtaskById(subtaskId);
+
+        Epic epicAfterDelete = taskManager.getEpic(epic1Id);
+        assertFalse(epicAfterDelete.getSubtaskIds().contains(subtaskId),
+                "ID сабтаски не должен оставаться в эпике.");
+    }
+
+    @Test
+    void shouldNotAffectTaskManagerWhenTaskIsModifiedAfterAdding() {
+        Task task = new Task("Задача", "Описание", TaskStatus.NEW);
+        int taskId = taskManager.addNewTask(task);
+
+        task.setName("Изменённое название");
+        task.setDescription("Изменённое описание");
+        task.setStatus(TaskStatus.DONE);
+
+        Task savedTask = taskManager.getTask(taskId);
+
+        assertEquals("Задача", savedTask.getName(), "Название задачи не должно измениться.");
+        assertEquals("Описание", savedTask.getDescription(), "Описание задачи не должно измениться.");
+        assertEquals(TaskStatus.NEW, savedTask.getStatus(), "Статус задачи не должен измениться.");
+    }
+
+    @Test
+    void shouldPreserveSubtasksAfterEpicUpdate() {
+        Subtask subtask1 = new Subtask(epic1Id, "Саб-таска 1", "Описание 1", TaskStatus.NEW);
+        Subtask subtask2 = new Subtask(epic1Id, "Саб-таска 2", "Описание 2", TaskStatus.NEW);
+        int subtask1Id = taskManager.addNewSubtask(subtask1);
+        int subtask2Id = taskManager.addNewSubtask(subtask2);
+
+        Epic epicToUpdate = taskManager.getEpic(epic1Id);
+        epicToUpdate.setName("Обновлённый эпик");
+        epicToUpdate.setDescription("Новое описание");
+        taskManager.updateEpicFill(epicToUpdate);
+
+        Epic savedEpic = taskManager.getEpic(epic1Id);
+        assertEquals("Обновлённый эпик", savedEpic.getName(), "Название эпика не обновилось.");
+        assertEquals(2, savedEpic.getSubtaskIds().size(), "Количество саб-тасок не должно измениться.");
+        assertTrue(savedEpic.getSubtaskIds().contains(subtask1Id),
+                "Саб-таска 1 должна быть привязана к эпику.");
+        assertTrue(savedEpic.getSubtaskIds().contains(subtask2Id),
+                "Саб-таска 2 должна быть привязана к эпику.");
+    }
+
+    @Test
+    void shouldRemoveAllSubtasksWhenEpicIsDeleted() {
+        Subtask subtask1 = new Subtask(epic1Id, "Саб-таска 1", "Описание 1", TaskStatus.NEW);
+        Subtask subtask2 = new Subtask(epic1Id, "Саб-таска 2", "Описание 2", TaskStatus.NEW);
+        taskManager.addNewSubtask(subtask1);
+        taskManager.addNewSubtask(subtask2);
+
+        taskManager.deleteEpicById(epic1Id);
+
+        List<Subtask> subtasks = taskManager.getSubtasks();
+        assertTrue(subtasks.isEmpty(), "Список саб-тасок должен быть пустым.");
+
+        assertNull(taskManager.getEpic(epic1Id), "Эпик должен быть удалён.");
     }
 }

@@ -21,9 +21,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int addNewTask(Task task) {
         int taskId = idCounter++;
-        task.setId(taskId);
-        tasks.put(task.getId(), task);
-        System.out.println("Задача \"" + task.getName() + "\" с id=" + taskId + " добавлена!");
+        Task taskCopy = new Task(task.getName(), task.getDescription(), task.getStatus());
+        taskCopy.setId(taskId);
+        tasks.put(taskId, taskCopy);
+        System.out.println("Задача \"" + taskCopy.getName() + "\" с id=" + taskId + " добавлена!");
         return taskId;
     }
 
@@ -33,9 +34,10 @@ public class InMemoryTaskManager implements TaskManager {
 
         if (task != null) {
             historyManager.add(task);
+            return new Task(task.getName(), task.getDescription(), task.getStatus());
         }
 
-        return task;
+        return null;
     }
 
     @Override
@@ -66,9 +68,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int addNewEpic(Epic epic) {
         int epicId = idCounter++;
-        epic.setId(epicId);
-        epics.put(epicId, epic);
-        System.out.println("Эпик \"" + epic.getName() + "\" с id=" + epicId + " добавлен!");
+        Epic epicCopy = new Epic(epic.getName(), epic.getDescription());
+        epicCopy.setId(epicId);
+        epics.put(epicId, epicCopy);
+        System.out.println("Эпик \"" + epicCopy.getName() + "\" с id=" + epicId + " добавлен!");
         return epicId;
     }
 
@@ -78,9 +81,13 @@ public class InMemoryTaskManager implements TaskManager {
 
         if (epic != null) {
             historyManager.add(epic);
+            Epic epicCopy = new Epic(epic.getName(), epic.getDescription());
+            epicCopy.setId(epic.getId());
+            epicCopy.getSubtaskIds().addAll(epic.getSubtaskIds());
+            return epicCopy;
         }
 
-        return epic;
+        return null;
     }
 
     @Override
@@ -92,10 +99,12 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateEpicFill(Epic newEpic) {
         Epic oldEpic = epics.get(newEpic.getId());
 
-        oldEpic.setName(newEpic.getName());
-        oldEpic.setDescription(newEpic.getDescription());
+        if (oldEpic != null) {
+            oldEpic.setName(newEpic.getName());
+            oldEpic.setDescription(newEpic.getDescription());
 
-        System.out.println("Эпик c id=" + newEpic.getId() + " обновлен!");
+            System.out.println("Эпик c id=" + newEpic.getId() + " обновлен!");
+        }
     }
 
     @Override
@@ -160,12 +169,14 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         int subtaskId = idCounter++;
-        subtask.setId(subtaskId);
-        subtasks.put(subtaskId, subtask);
+        Subtask subtaskCopy =
+                new Subtask(subtask.getIdEpic(), subtask.getName(), subtask.getDescription(), subtask.getStatus());
+        subtaskCopy.setId(subtaskId);
+        subtasks.put(subtaskId, subtaskCopy);
         epic.addSubtaskId(subtaskId);
         updateEpicStatus(epic);
 
-        System.out.println("Саб-задача \"" + subtask.getName() + "\" с id=" + subtaskId + " добавлена!");
+        System.out.println("Саб-задача \"" + subtaskCopy.getName() + "\" с id=" + subtaskId + " добавлена!");
         return subtaskId;
     }
 
@@ -175,9 +186,10 @@ public class InMemoryTaskManager implements TaskManager {
 
         if (subtask != null) {
             historyManager.add(subtask);
+            return new Subtask(subtask.getIdEpic(), subtask.getName(), subtask.getDescription(), subtask.getStatus());
         }
 
-        return subtask;
+        return null;
     }
 
     @Override
