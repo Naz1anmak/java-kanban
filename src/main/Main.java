@@ -42,7 +42,7 @@ public class Main {
         System.out.println(taskManager.getEpics());
 
         System.out.println(" ".repeat(18) + "***  Проверка обновления задачи и вывод  ***");
-        Task task = new Task(taskManager.getEpics().getFirst().getSubtaskIds().getFirst(),
+        Task task = new Task(taskManager.getTasks().getFirst().getId(),
                 "Четвертая", "Обновленная", TaskStatus.DONE);
         taskManager.updateTask(task);
         System.out.println(taskManager.getTasks());
@@ -63,5 +63,33 @@ public class Main {
         System.out.println(" ".repeat(18) + "***  Проверка удаления эпика  ***");
         taskManager.deleteEpicById(taskManager.getEpics().getFirst().getId());
         System.out.println(taskManager.getEpics());
+
+        System.out.println(" ".repeat(18) + "***  Проверка вывода истории  ***");
+        Task task3 = new Task("Третья", "Описание 3", TaskStatus.DONE);
+        taskManager.addNewTask(task3);
+        Task task4 = new Task("Четвертая", "Описание 4", TaskStatus.DONE);
+        taskManager.addNewTask(task4);
+        Task task5 = new Task("Пятая", "Описание 5", TaskStatus.DONE);
+        taskManager.addNewTask(task5);
+        Epic epic3 = new Epic("Третий эпик", "Описание 3");
+        taskManager.addNewEpic(epic3);
+        Subtask subtask4 = new Subtask(epic3.getId(),
+                "Четвертая саб-таска", "Описание4", TaskStatus.NEW);
+        taskManager.addNewSubtask(subtask4);
+        taskManager.getTask(taskManager.getTasks().getFirst().getId());
+        taskManager.getTask(taskManager.getTasks().getLast().getId());
+        taskManager.getTask(taskManager.getTasks().getLast().getId() - 1);
+        taskManager.getTask(taskManager.getTasks().getLast().getId() - 2);
+        taskManager.getTask(taskManager.getTasks().getFirst().getId());
+        taskManager.getTask(taskManager.getTasks().getLast().getId());
+        taskManager.getEpic(epic3.getId());
+        taskManager.getSubtask(subtask4.getId());
+        System.out.println(taskManager.getHistory());
+
+        taskManager.deleteTaskById(taskManager.getTasks().getLast().getId());
+        taskManager.deleteTaskById(taskManager.getTasks().getLast().getId());
+        taskManager.deleteTaskById(taskManager.getTasks().getLast().getId());
+        taskManager.deleteEpicById(epic3.getId());
+        System.out.println(taskManager.getHistory());
     }
 }
