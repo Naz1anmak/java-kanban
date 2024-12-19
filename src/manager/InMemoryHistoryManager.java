@@ -37,10 +37,9 @@ public class InMemoryHistoryManager implements HistoryManager {
         return List.copyOf(historyList.getTasks());
     }
 
-    public static class DoublyLinkedList<T> {
-        public Node<T> head;
-        public Node<T> tail;
-        private int size = 0;
+    private static class DoublyLinkedList<T> {
+        private Node<T> head;
+        private Node<T> tail;
 
         public void linkLast(T task) {
             Node<T> oldTail = tail;
@@ -50,35 +49,32 @@ public class InMemoryHistoryManager implements HistoryManager {
             if (oldTail == null)
                 head = newNode;
             else
-                oldTail.next = newNode;
-            size++;
+                oldTail.setNext(newNode);
         }
 
         public List<T> getTasks() {
-            List<T> tasks = new ArrayList<>(size);
+            List<T> tasks = new ArrayList<>();
             Node<T> current = head;
             while (current != null) {
-                tasks.add(current.data);
-                current = current.next;
+                tasks.add(current.getData());
+                current = current.getNext();
             }
             return tasks;
         }
 
 
         public void removeNode(Node<T> node) {
-            if (node.prev != null) {
-                node.prev.next = node.next;
+            if (node.getPrev() != null) {
+                node.getPrev().setNext(node.getNext());
             } else {
-                head = node.next;
+                head = node.getNext();
             }
 
-            if (node.next != null) {
-                node.next.prev = node.prev;
+            if (node.getNext() != null) {
+                node.getNext().setPrev(node.getPrev());
             } else {
-                tail = node.prev;
+                tail = node.getPrev();
             }
-
-            size--;
         }
     }
 }
