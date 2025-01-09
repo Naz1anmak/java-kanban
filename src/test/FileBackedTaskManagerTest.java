@@ -111,7 +111,7 @@ public class FileBackedTaskManagerTest {
     }
 
     @Test
-    void LoadingTasks() {
+    void loadingTasks() {
         operationsWithTasksAndPopulateManager(fileBackedTaskManager);
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
 
