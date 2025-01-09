@@ -18,7 +18,7 @@ import java.nio.file.Paths;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class FileBackedTaskManagerTest {
-    private static final Path FILE_PATH = Paths.get("src/test/autoSaveTest");
+    private static final Path FILE_PATH = Paths.get("test/autoSaveTest");
     private File file;
     private FileBackedTaskManager fileBackedTaskManager;
 
