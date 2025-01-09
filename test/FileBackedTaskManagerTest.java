@@ -1,5 +1,3 @@
-package test;
-
 import manager.FileBackedTaskManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +16,7 @@ import java.nio.file.Paths;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class FileBackedTaskManagerTest {
-    private static final Path FILE_PATH = Paths.get("test/autoSaveTest");
+    private static final Path FILE_PATH = Paths.get("autoSaveTest");
     private File file;
     private FileBackedTaskManager fileBackedTaskManager;
 
