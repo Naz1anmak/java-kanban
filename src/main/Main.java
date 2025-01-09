@@ -110,9 +110,6 @@ public class Main {
 
     public static void case2() {
         System.out.println(" ".repeat(18) + "***  Проверка FileBackedTaskManager  ***");
-        /*Path saveFilePath = Paths.get("src/history/autoSave.csv");
-        FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(saveFilePath);*/
-
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(null);
         Task task1 = new Task("Первая", "Описание 1", TaskStatus.NEW);
         fileBackedTaskManager.addNewTask(task1);

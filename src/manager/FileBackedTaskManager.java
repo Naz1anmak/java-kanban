@@ -11,17 +11,18 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
-public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
+public class FileBackedTaskManager extends InMemoryTaskManager {
+    private static final String HISTORY_DIR = "src/history";
+    private static final String AUTO_SAVE_FILE = "autoSave.csv";
     private final File autoSaveFile;
 
     public FileBackedTaskManager(Path autoSavePath) {
         try {
             if (autoSavePath == null || !Files.exists(autoSavePath) || !Files.isRegularFile(autoSavePath)) {
-                Path dir = Paths.get("src/history");
-                Path defaultFile = dir.resolve("autoSave.csv");
+                Path dir = Paths.get(HISTORY_DIR);
+                Path defaultFile = dir.resolve(AUTO_SAVE_FILE);
 
                 if (!Files.exists(defaultFile)) {
                     Files.createFile(defaultFile);
@@ -32,12 +33,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
             } else {
                 this.autoSaveFile = autoSavePath.toFile();
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Ошибка при создании файла для автосохранения.", e);
-        }
-
-        if (autoSaveFile.exists()) {
-            loadFromFile(autoSaveFile);
+        } catch (IOException exception) {
+            throw new RuntimeException("Ошибка при создании файла для автосохранения.", exception);
         }
     }
 
@@ -53,19 +50,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(file);
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            while (br.ready()) {
-                String s = br.readLine().trim();
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+            while (bufferedReader.ready()) {
+                String string = bufferedReader.readLine().trim();
 
-                if (!s.isEmpty()) {
-                    Task task = fileBackedTaskManager.fromString(s);
+                if (!string.isEmpty()) {
+                    Task task = fileBackedTaskManager.fromString(string);
 
-                    if (task instanceof Epic) {
-                        fileBackedTaskManager.addNewEpicWithId((Epic) task);
-                    } else if (task instanceof Subtask) {
-                        fileBackedTaskManager.addNewSubtaskWithId((Subtask) task);
-                    } else {
-                        fileBackedTaskManager.addNewTaskWithId(task);
+                    switch (task) {
+                        case null -> {
+                            System.out.println("Ошибка. Задача пустая");
+                            return null;
+                        }
+                        case Epic epic -> fileBackedTaskManager.addNewEpicWithId(epic);
+                        case Subtask subtask -> fileBackedTaskManager.addNewSubtaskWithId(subtask);
+                        default -> fileBackedTaskManager.addNewTaskWithId(task);
                     }
                 }
             }
@@ -80,17 +79,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     private void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(autoSaveFile))) {
             for (Task task : getTasks()) {
-                writer.write(toString(task));
+                writer.write(task.toString());
                 writer.newLine();
             }
 
             for (Epic epic : getEpics()) {
-                writer.write(toString(epic));
+                writer.write(epic.toString());
                 writer.newLine();
             }
 
             for (Subtask subtask : getSubtasks()) {
-                writer.write(toString(subtask));
+                writer.write(subtask.toString());
                 writer.newLine();
             }
 
@@ -99,35 +98,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         }
     }
 
-    private String toString(Task task) {
-        return String.format("%d,%s,%s,%s,%s",
-                task.getId(), TasksTypes.TASK, task.getName(), task.getStatus(), task.getDescription());
-    }
-
-    private String toString(Epic epic) {
-        return String.format("%d,%s,%s,%s,%s",
-                epic.getId(), TasksTypes.EPIC, epic.getName(), epic.getStatus(), epic.getDescription());
-    }
-
-    private String toString(Subtask subtask) {
-        return String.format("%d,%s,%s,%s,%s,%d",
-                subtask.getId(), TasksTypes.SUBTASK, subtask.getName(),
-                subtask.getStatus(), subtask.getDescription(), subtask.getIdEpic());
-    }
-
     private Task fromString(String value) {
         String[] fields = value.split(",");
         TasksTypes tasksTypes = TasksTypes.valueOf(fields[1]);
 
-        switch (tasksTypes) {
-            case TASK:
-                return parseTask(fields);
-            case EPIC:
-                return parseEpic(fields);
-            case SUBTASK:
-                return parseSubtask(fields);
-        }
-        return null;
+        return switch (tasksTypes) {
+            case TASK -> parseTask(fields);
+            case EPIC -> parseEpic(fields);
+            case SUBTASK -> parseSubtask(fields);
+        };
     }
 
     private Task parseTask(String[] fields) {
@@ -218,7 +197,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
     @Override
     public List<Task> getTasks() {
-        return new ArrayList<>(tasks.values());
+        return super.getTasks();
     }
 
     @Override
@@ -253,7 +232,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
     @Override
     public List<Epic> getEpics() {
-        return new ArrayList<>(epics.values());
+        return super.getEpics();
     }
 
     @Override
@@ -299,7 +278,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
 
     @Override
     public List<Subtask> getSubtasks() {
-        return new ArrayList<>(subtasks.values());
+        return super.getSubtasks();
     }
 
     @Override

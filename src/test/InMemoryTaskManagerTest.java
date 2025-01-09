@@ -1,3 +1,5 @@
+package test;
+
 import manager.Managers;
 import manager.TaskManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,14 +17,13 @@ public class InMemoryTaskManagerTest {
     private TaskManager taskManager;
     private Epic epic1;
     private int epic1Id;
-    private Epic epic2;
 
     @BeforeEach
     void beforeEach() {
         taskManager = Managers.getDefault();
         epic1 = new Epic("Первый эпик", "Описание 1");
         epic1Id = taskManager.addNewEpic(epic1);
-        epic2 = new Epic("Второй эпик", "Описание 2");
+        Epic epic2 = new Epic("Второй эпик", "Описание 2");
         taskManager.addNewEpic(epic2);
     }
 

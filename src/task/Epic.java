@@ -1,5 +1,7 @@
 package task;
 
+import history.TasksTypes;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,12 +27,7 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        return "Epic{" +
-                "id=" + getId() +
-                ", name='" + getName() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", status=" + status +
-                ", subtaskIds=" + subtaskIds +
-                "}\n";
+        return String.format("%d,%s,%s,%s,%s",
+                getId(), TasksTypes.EPIC, getName(), getStatus(), getDescription());
     }
 }
