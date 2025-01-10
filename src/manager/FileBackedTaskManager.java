@@ -69,8 +69,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
             }
 
-        } catch (IOException e) {
-            throw new RuntimeException("Ошибка при загрузке данных из файла", e);
+        } catch (IOException exception) {
+            throw new RuntimeException("Ошибка при загрузке данных из файла", exception);
         }
 
         return fileBackedTaskManager;
@@ -93,8 +93,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 writer.newLine();
             }
 
-        } catch (IOException e) {
-            throw new ManagerSaveException("Ошибка при сохранении данных в файл", e);
+        } catch (IOException exception) {
+            throw new ManagerSaveException("Ошибка при сохранении данных в файл", exception);
         }
     }
 
