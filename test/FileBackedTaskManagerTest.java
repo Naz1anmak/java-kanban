@@ -12,18 +12,33 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.Month;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class FileBackedTaskManagerTest {
+public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
+
+    @Override
+    protected FileBackedTaskManager createTaskManager() {
+        return new FileBackedTaskManager(null);
+    }
+
     private static final Path FILE_PATH = Paths.get("autoSaveTest");
     private File file;
     private FileBackedTaskManager fileBackedTaskManager;
 
-    private Task updatedTask;
-    private Task task5;
+    private Task task1;
+    private Task task2;
+    private Task task3;
+    private Epic epic1;
     private Epic epic2;
+    private Subtask subtask1;
+    private Subtask subtask2;
     private Subtask subtask3;
+
+    private Task updatedTask;
 
     @BeforeEach
     void beforeEach() throws IOException {
@@ -35,6 +50,27 @@ public class FileBackedTaskManagerTest {
 
         file = FILE_PATH.toFile();
         fileBackedTaskManager = new FileBackedTaskManager(FILE_PATH);
+
+        task1 = new Task("Первая", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 13, 0), Duration.ofMinutes(120));
+        task2 = new Task("Вторая", "Описание 2", TaskStatus.DONE,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 10, 0), Duration.ofMinutes(180));
+
+        epic1 = new Epic("Первый эпик", "Описание 1");
+        epic2 = new Epic("Второй эпик", "Описание 2");
+
+        subtask1 = new Subtask(-1,
+                "Первая подзадача", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.MARCH, 1, 12, 0), Duration.ofMinutes(120));
+        subtask2 = new Subtask(-1,
+                "Вторая подзадача", "Описание 2", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.JANUARY, 26, 12, 0), Duration.ofMinutes(180));
+        subtask3 = new Subtask(-1,
+                "Третья подзадача", "Описание 3", TaskStatus.DONE,
+                LocalDateTime.of(2025, Month.MARCH, 1, 20, 15), Duration.ofMinutes(150));
+
+        updatedTask = new Task("Изменённое название", "Описание 1", TaskStatus.DONE,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 13, 0), Duration.ofMinutes(120));
     }
 
     @AfterAll
@@ -58,38 +94,34 @@ public class FileBackedTaskManagerTest {
     }
 
     private void operationsWithTasksAndPopulateManager(FileBackedTaskManager fileBackedTaskManager) {
-        Task task1 = new Task("Первая", "Описание 1", TaskStatus.NEW);
         int task1Id = fileBackedTaskManager.addNewTask(task1);
-        task1.setId(task1Id);
-        Task task2 = new Task("Вторая", "Описание 2", TaskStatus.DONE);
-        fileBackedTaskManager.addNewTask(task2);
-        Epic epic1 = new Epic("Первый эпик", "Описание 1");
-        fileBackedTaskManager.addNewEpic(epic1);
-        epic2 = new Epic("Второй эпик", "Описание 2");
+        int task2Id = fileBackedTaskManager.addNewTask(task2);
+        int epic1Id = fileBackedTaskManager.addNewEpic(epic1);
         int epic2Id = fileBackedTaskManager.addNewEpic(epic2);
-        epic2.setId(epic2Id);
-        Subtask subtask1 = new Subtask(fileBackedTaskManager.getEpics().getFirst().getId(),
-                "Первая саб-таска", "Описание1", TaskStatus.NEW);
-        fileBackedTaskManager.addNewSubtask(subtask1);
-        Subtask subtask2 = new Subtask(fileBackedTaskManager.getEpics().getFirst().getId(),
-                "Вторая саб-таска", "Описание2", TaskStatus.NEW);
-        fileBackedTaskManager.addNewSubtask(subtask2);
-        subtask3 = new Subtask(fileBackedTaskManager.getEpics().getLast().getId(),
-                "Третья саб-таска", "Описание3", TaskStatus.NEW);
-        int subtask3Id = fileBackedTaskManager.addNewSubtask(subtask3);
-        subtask3.setId(subtask3Id);
-        epic2.addSubtaskId(subtask3Id);
 
-        updatedTask = new Task(fileBackedTaskManager.getTasks().getFirst().getId(),
-                "Четвертая", "Обновленная", TaskStatus.DONE);
-        fileBackedTaskManager.updateTask(updatedTask);
+        task1.setId(task1Id);
+        task2.setId(task2Id);
+        subtask1.setIdEpic(epic1Id);
+        subtask2.setIdEpic(epic2Id);
+        subtask3.setIdEpic(epic2Id);
+
+        fileBackedTaskManager.addNewSubtask(subtask1);
+        int subtask2Id = fileBackedTaskManager.addNewSubtask(subtask2);
+        int subtask3Id = fileBackedTaskManager.addNewSubtask(subtask3);
+
+        subtask2.setId(subtask2Id);
+        subtask3.setId(subtask3Id);
+        epic2 = fileBackedTaskManager.getEpic(epic2Id);
+
+        fileBackedTaskManager.updateTask(task1, updatedTask);
 
         fileBackedTaskManager.deleteTaskById(fileBackedTaskManager.getTasks().getLast().getId());
         fileBackedTaskManager.deleteEpicById(fileBackedTaskManager.getEpics().getFirst().getId());
 
-        task5 = new Task("Пятая", "Описание 5", TaskStatus.NEW);
-        int task5Id = fileBackedTaskManager.addNewTask(task5);
-        task5.setId(task5Id);
+        task3 = new Task("Третья", "Описание 3", TaskStatus.DONE,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 10, 0), Duration.ofMinutes(180));
+        int task3Id = fileBackedTaskManager.addNewTask(task3);
+        task3.setId(task3Id);
     }
 
     @Test
@@ -98,14 +130,14 @@ public class FileBackedTaskManagerTest {
 
         assertEquals(2, fileBackedTaskManager.getTasks().size(), "Должны быть две задачи.");
         assertEquals(updatedTask, fileBackedTaskManager.getTasks().getFirst(), "Задача должна совпадать.");
-        assertEquals(task5, fileBackedTaskManager.getTasks().getLast(), "Задача должна совпадать.");
+        assertEquals(task3, fileBackedTaskManager.getTasks().getLast(), "Задача должна совпадать.");
 
         assertEquals(1, fileBackedTaskManager.getEpics().size(), "Количество эпиков должно совпадать.");
         assertEquals(epic2, fileBackedTaskManager.getEpics().getFirst(), "Эпик должен совпадать.");
 
-        assertEquals(1, fileBackedTaskManager.getSubtasks().size(), "Количество сабтасок должно совпадать.");
-        assertEquals(subtask3, fileBackedTaskManager.getSubtasks().getFirst(), "Сабтаска должна совпадать.");
-        assertEquals(subtask3.getIdEpic(), epic2.getId(), "Сабтаска не привязана.");
+        assertEquals(2, fileBackedTaskManager.getSubtasks().size(), "Количество подзадач должно совпадать.");
+        assertEquals(subtask2, fileBackedTaskManager.getSubtasks().getFirst(), "Подзадача должна совпадать.");
+        assertEquals(subtask3.getIdEpic(), epic2.getId(), "Подзадача не привязана.");
     }
 
     @Test
@@ -115,13 +147,15 @@ public class FileBackedTaskManagerTest {
 
         assertEquals(2, loadedManager.getTasks().size(), "Количество задач должно совпадать.");
         assertEquals(updatedTask, loadedManager.getTasks().getFirst(), "Задача должна совпадать.");
-        assertEquals(task5, loadedManager.getTasks().getLast(), "Задача должна совпадать.");
+        assertEquals(task3, loadedManager.getTasks().getLast(), "Задача должна совпадать.");
 
         assertEquals(1, loadedManager.getEpics().size(), "Количество эпиков должно совпадать.");
         assertEquals(epic2, loadedManager.getEpics().getFirst(), "Эпик должен совпадать.");
 
-        assertEquals(1, loadedManager.getSubtasks().size(), "Количество сабтасок должно совпадать.");
-        assertEquals(subtask3, loadedManager.getSubtasks().getFirst(), "Сабтаска должна совпадать.");
-        assertEquals(subtask3.getIdEpic(), epic2.getId(), "Сабтаска не привязана.");
+        assertEquals(2, loadedManager.getSubtasks().size(), "Количество подзадач должно совпадать.");
+        assertEquals(subtask2, loadedManager.getSubtasks().getFirst(), "Подзадача должна совпадать.");
+        assertEquals(subtask2.getIdEpic(), epic2.getId(), "Подзадача не привязана.");
+        assertEquals(subtask3, loadedManager.getSubtasks().getLast(), "Подзадача должна совпадать.");
+        assertEquals(subtask3.getIdEpic(), epic2.getId(), "Подзадача не привязана.");
     }
 }

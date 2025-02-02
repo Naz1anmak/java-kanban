@@ -11,9 +11,12 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
+    private static InMemoryHistoryManager historyManager;
     private static final String HISTORY_DIR = "src/history";
     private static final String AUTO_SAVE_FILE = "autoSave.csv";
     private final File autoSaveFile;
@@ -49,6 +52,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
 
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(file);
+        historyManager = fileBackedTaskManager.getHistoryManager();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             while (bufferedReader.ready()) {
@@ -114,7 +118,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String name = fields[2];
         TaskStatus status = TaskStatus.valueOf(fields[3]);
         String description = fields[4];
-        return new Task(id, name, description, status);
+        LocalDateTime startTime = LocalDateTime.parse(fields[5]);
+        Duration duration = Duration.parse(fields[6]);
+        Task task = new Task(name, description, status, startTime, duration);
+        task.setId(id);
+        return task;
     }
 
     private Epic parseEpic(String[] fields) {
@@ -134,53 +142,50 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         TaskStatus status = TaskStatus.valueOf(fields[3]);
         String description = fields[4];
         int idEpic = Integer.parseInt(fields[5]);
-        Subtask subtask = new Subtask(idEpic, name, description, status);
+        LocalDateTime startTime = LocalDateTime.parse(fields[6]);
+        Duration duration = Duration.parse(fields[7]);
+        Subtask subtask = new Subtask(idEpic, name, description, status, startTime, duration);
         subtask.setId(id);
         return subtask;
     }
 
     public void addNewTaskWithId(Task task) {
-        int taskId = task.getId();
-        Task taskCopy = new Task(task.getName(), task.getDescription(), task.getStatus());
-        taskCopy.setId(taskId);
-        tasks.put(taskId, taskCopy);
+        task.getEndTime(task.getStartTime(), task.getDuration());
+        tasks.put(task.getId(), task);
+        historyManager.addToPrioritizedTasks(task);
 
-        if (taskCopy.getId() >= idCounter) {
-            idCounter = taskCopy.getId() + 1;
+        if (task.getId() >= idCounter) {
+            idCounter = task.getId() + 1;
         }
 
-        System.out.println("Таска загружена: " + taskCopy);
+        System.out.println("Таска загружена: " + task);
     }
 
     public void addNewEpicWithId(Epic epic) {
-        int epicId = epic.getId();
-        Epic epicCopy = new Epic(epic.getName(), epic.getDescription());
-        epicCopy.setId(epicId);
-        epics.put(epicId, epicCopy);
+        epics.put(epic.getId(), epic);
 
-        if (epicCopy.getId() >= idCounter) {
-            idCounter = epicCopy.getId() + 1;
+        if (epic.getId() >= idCounter) {
+            idCounter = epic.getId() + 1;
         }
 
-        System.out.println("Эпик загружен: " + epicCopy);
+        System.out.println("Эпик загружен: " + epic);
     }
 
     public void addNewSubtaskWithId(Subtask subtask) {
         Epic epic = epics.get(subtask.getIdEpic());
-
         int subtaskId = subtask.getId();
-        Subtask subtaskCopy =
-                new Subtask(subtask.getIdEpic(), subtask.getName(), subtask.getDescription(), subtask.getStatus());
-        subtaskCopy.setId(subtaskId);
-        subtasks.put(subtaskId, subtaskCopy);
+
+        subtask.getEndTime(subtask.getStartTime(), subtask.getDuration());
+        subtasks.put(subtaskId, subtask);
+        historyManager.addToPrioritizedTasks(subtask);
         epic.addSubtaskId(subtaskId);
         updateEpicStatus(epic);
 
-        if (subtaskCopy.getId() >= idCounter) {
-            idCounter = subtaskCopy.getId() + 1;
+        if (subtask.getId() >= idCounter) {
+            idCounter = subtask.getId() + 1;
         }
 
-        System.out.println("Сабтаска загружена: " + subtaskCopy);
+        System.out.println("Сабтаска загружена: " + subtask);
     }
 
     @Override
@@ -201,8 +206,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public void updateTask(Task task) {
-        super.updateTask(task);
+    public void updateTask(Task oldTask, Task newTask) {
+        super.updateTask(oldTask, newTask);
         save();
     }
 
@@ -213,8 +218,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public void deleteTasks() {
-        super.deleteTasks();
+    public void deleteAllTasks() {
+        super.deleteAllTasks();
         save();
     }
 
@@ -236,8 +241,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public void updateEpicFill(Epic newEpic) {
-        super.updateEpicFill(newEpic);
+    public void updateEpicFill(Epic oldEpic, Epic newEpic) {
+        super.updateEpicFill(oldEpic, newEpic);
         save();
     }
 
@@ -272,8 +277,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public List<Subtask> getAllLinkedSubtasks(int epicId) {
-        return super.getAllLinkedSubtasks(epicId);
+    public List<Subtask> getEpicSubtasks(int epicId) {
+        return super.getEpicSubtasks(epicId);
     }
 
     @Override
@@ -282,8 +287,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public void updateSub(Subtask oldSubtask, Subtask newSubtask) {
-        super.updateSub(oldSubtask, newSubtask);
+    public void updateSubtask(Subtask oldSubtask, Subtask newSubtask) {
+        super.updateSubtask(oldSubtask, newSubtask);
         save();
     }
 

@@ -1,5 +1,6 @@
 package manager;
 
+import exception.TaskIntersectionException;
 import task.Epic;
 import task.Subtask;
 import task.Task;
@@ -7,17 +8,17 @@ import task.Task;
 import java.util.List;
 
 public interface TaskManager {
-    int addNewTask(Task task);
+    int addNewTask(Task task) throws TaskIntersectionException;
 
     Task getTask(int id);
 
     List<Task> getTasks();
 
-    void updateTask(Task task);
+    void updateTask(Task oldTask, Task newTask);
 
     void deleteTaskById(int id);
 
-    void deleteTasks();
+    void deleteAllTasks();
 
     int addNewEpic(Epic epic);
 
@@ -25,7 +26,7 @@ public interface TaskManager {
 
     List<Epic> getEpics();
 
-    void updateEpicFill(Epic newEpic);
+    void updateEpicFill(Epic oldEpic, Epic newEpic);
 
     void updateEpicStatus(Epic epic);
 
@@ -37,15 +38,17 @@ public interface TaskManager {
 
     Subtask getSubtask(int id);
 
-    List<Subtask> getAllLinkedSubtasks(int epicId);
+    List<Subtask> getEpicSubtasks(int epicId);
 
     List<Subtask> getSubtasks();
 
-    void updateSub(Subtask oldSubtask, Subtask newSubtask);
+    void updateSubtask(Subtask oldSubtask, Subtask newSubtask);
 
     void deleteSubtaskById(int id);
 
     void deleteAllSubtasks();
 
     List<Task> getHistory();
+
+    List<Task> getPrioritizedTasks();
 }

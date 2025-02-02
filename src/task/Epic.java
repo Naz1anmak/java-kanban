@@ -14,7 +14,7 @@ public class Epic extends Task {
     }
 
     public List<Integer> getSubtaskIds() {
-        return subtaskIds;
+        return List.copyOf(subtaskIds);
     }
 
     public void addSubtaskId(int subtaskId) {
@@ -27,7 +27,8 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        return String.format("%d,%s,%s,%s,%s",
-                getId(), TasksTypes.EPIC, getName(), getStatus(), getDescription());
+        return String.format("%d,%s,%s,%s,%s,%s,%s",
+                getId(), TasksTypes.EPIC, getName(), getStatus(), getDescription(),
+                getStartTime(), getDuration());
     }
 }
