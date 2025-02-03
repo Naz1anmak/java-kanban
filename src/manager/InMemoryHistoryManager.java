@@ -4,13 +4,14 @@ import history.HistoryManager;
 import history.Node;
 import task.Task;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class InMemoryHistoryManager implements HistoryManager {
     private final DoublyLinkedList<Task> historyList = new DoublyLinkedList<>();
     private final Map<Integer, Node<Task>> historyMap = new HashMap<>();
-    private final Set<Task> prioritizedTasks = new TreeSet<>(taskComparator);
 
     @Override
     public void add(Task task) {
@@ -22,18 +23,6 @@ public class InMemoryHistoryManager implements HistoryManager {
 
         historyList.linkLast(task);
         historyMap.put(task.getId(), historyList.tail);
-    }
-
-    @Override
-    public void addToPrioritizedTasks(Task task) {
-        if (task.getStartTime() != null) {
-            prioritizedTasks.add(task);
-        }
-    }
-
-    @Override
-    public void removePrioritizedTask(Task task) {
-        prioritizedTasks.remove(task);
     }
 
     @Override
@@ -49,11 +38,6 @@ public class InMemoryHistoryManager implements HistoryManager {
     public List<Task> getHistory() {
         System.out.println("История просмотров: ");
         return List.copyOf(historyList.getTasks());
-    }
-
-    @Override
-    public List<Task> getPrioritizedTasks() {
-        return List.copyOf(prioritizedTasks);
     }
 
     private static class DoublyLinkedList<T> {
@@ -95,36 +79,5 @@ public class InMemoryHistoryManager implements HistoryManager {
                 tail = node.getPrev();
             }
         }
-    }
-
-    private static final Comparator<Task> taskComparator = (o1, o2) -> {
-        if (!o1.getStartTime().equals(o2.getStartTime())) {
-            return o1.getStartTime().compareTo(o2.getStartTime());
-        }
-
-        return Integer.compare(o1.getId(), o2.getId());
-    };
-
-    @Override
-    public boolean isIntersectionTasks(Task newTask) {
-        return getPrioritizedTasks().stream()
-                .anyMatch(prioritizedTask -> {
-                    LocalDateTime startTime = prioritizedTask.getStartTime();
-                    LocalDateTime endTime = prioritizedTask.getEndTime();
-                    return newTask.getStartTime().isBefore(endTime) &&
-                            newTask.getEndTime().isAfter(startTime);
-                });
-    }
-
-    @Override
-    public boolean isIntersectionTasks(Task newTask, int idAddedTask) {
-        return getPrioritizedTasks().stream()
-                .filter(task -> task.getId() != idAddedTask)
-                .anyMatch(prioritizedTask -> {
-                    LocalDateTime startTime = prioritizedTask.getStartTime();
-                    LocalDateTime endTime = prioritizedTask.getEndTime();
-                    return newTask.getStartTime().isBefore(endTime) &&
-                            newTask.getEndTime().isAfter(startTime);
-                });
     }
 }

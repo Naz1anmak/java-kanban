@@ -9,10 +9,7 @@ import task.TaskStatus;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class InMemoryTaskManager implements TaskManager {
@@ -20,11 +17,15 @@ public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, Task> tasks = new HashMap<>();
     protected final Map<Integer, Epic> epics = new HashMap<>();
     protected final Map<Integer, Subtask> subtasks = new HashMap<>();
+    private final Set<Task> prioritizedTasks = new TreeSet<>(taskComparator);
     private final HistoryManager historyManager = Managers.getDefaultHistory();
 
     @Override
     public int addNewTask(Task task) {
-        getIsIntersectionTasks(task);
+        if (isIntersectionTasks(task)) {
+            throw new TaskIntersectionException(
+                    "Задача \"" + task.getName() + "\" пересекается по времени с другой задачей!");
+        }
 
         int taskId = idCounter++;
         Task taskCopy = new Task(task.getName(), task.getDescription(),
@@ -33,7 +34,7 @@ public class InMemoryTaskManager implements TaskManager {
         taskCopy.setEndTime(task.getEndTime());
         tasks.put(taskId, taskCopy);
 
-        historyManager.addToPrioritizedTasks(taskCopy);
+        addToPrioritizedTasks(taskCopy);
 
         System.out.println("Задача \"" + taskCopy.getName() + "\" с id=" + taskId + " добавлена!");
         return taskId;
@@ -58,13 +59,16 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateTask(Task oldTask, Task newTask) {
-        getIsIntersectionTasks(newTask, oldTask.getId());
+        if (isIntersectionTasks(newTask, oldTask.getId())) {
+            throw new TaskIntersectionException(
+                    "Задача \"" + newTask.getName() + "\" пересекается по времени с другой задачей!");
+        }
 
         newTask.setId(oldTask.getId());
         newTask.getEndTime(newTask.getStartTime(), newTask.getDuration());
         tasks.put(oldTask.getId(), newTask);
-        historyManager.removePrioritizedTask(oldTask);
-        historyManager.addToPrioritizedTasks(newTask);
+        removePrioritizedTask(oldTask);
+        addToPrioritizedTasks(newTask);
         System.out.println("Задача c id=" + newTask.getId() + " обновлена!");
     }
 
@@ -73,14 +77,14 @@ public class InMemoryTaskManager implements TaskManager {
         Task task = tasks.remove(id);
         String name = task.getName();
         historyManager.remove(id);
-        historyManager.removePrioritizedTask(task);
+        removePrioritizedTask(task);
         System.out.println("Задача \"" + name + "\" удалена!");
     }
 
     @Override
     public void deleteAllTasks() {
         for (Task task : tasks.values()) {
-            historyManager.removePrioritizedTask(task);
+            removePrioritizedTask(task);
         }
 
         tasks.clear();
@@ -195,7 +199,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addNewSubtask(Subtask subtask) {
-        getIsIntersectionTasks(subtask);
+        if (isIntersectionTasks(subtask)) {
+            throw new TaskIntersectionException(
+                    "Задача \"" + subtask.getName() + "\" пересекается по времени с другой задачей!");
+        }
 
         Epic epic = epics.get(subtask.getIdEpic());
         if (epic == null) {
@@ -223,7 +230,7 @@ public class InMemoryTaskManager implements TaskManager {
         updateEpicStatus(epic);
 
         if (subtaskCopy.getStartTime() != null) {
-            historyManager.addToPrioritizedTasks(subtaskCopy);
+            addToPrioritizedTasks(subtaskCopy);
 
             subtaskCopy.getEndTime(subtaskCopy.getStartTime(), subtaskCopy.getDuration());
         }
@@ -273,7 +280,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateSubtask(Subtask oldSubtask, Subtask newSubtask) {
-        getIsIntersectionTasks(newSubtask, oldSubtask.getId());
+        if (isIntersectionTasks(newSubtask, oldSubtask.getId())) {
+            throw new TaskIntersectionException(
+                    "Задача \"" + newSubtask.getName() + "\" пересекается по времени с другой задачей!");
+        }
 
         Epic epic = epics.get(newSubtask.getIdEpic());
         if (epic == null) {
@@ -284,8 +294,8 @@ public class InMemoryTaskManager implements TaskManager {
         newSubtask.setId(oldSubtask.getId());
         newSubtask.getEndTime(newSubtask.getStartTime(), newSubtask.getDuration());
         subtasks.put(newSubtask.getId(), newSubtask);
-        historyManager.removePrioritizedTask(oldSubtask);
-        historyManager.addToPrioritizedTasks(newSubtask);
+        removePrioritizedTask(oldSubtask);
+        addToPrioritizedTasks(newSubtask);
 
         updateEpicStatus(epic);
 
@@ -303,7 +313,7 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epics.get(subtask.getIdEpic());
         if (epic != null) {
             historyManager.remove(id);
-            historyManager.removePrioritizedTask(subtask);
+            removePrioritizedTask(subtask);
             epic.removeSubtaskId(id);
             updateEpicStatus(epic);
         }
@@ -316,7 +326,7 @@ public class InMemoryTaskManager implements TaskManager {
         for (Epic epic : epics.values()) {
             for (Integer subtaskId : epic.getSubtaskIds()) {
                 epic.removeSubtaskId(subtaskId);
-                historyManager.removePrioritizedTask(subtasks.get(subtaskId));
+                removePrioritizedTask(subtasks.get(subtaskId));
             }
             updateEpicStatus(epic);
         }
@@ -330,38 +340,58 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
-    @Override
-    public List<Task> getPrioritizedTasks() {
-        return historyManager.getPrioritizedTasks();
+    public void addToPrioritizedTasks(Task task) {
+        if (task.getStartTime() != null) {
+            prioritizedTasks.add(task);
+        }
     }
 
-    private void getIsIntersectionTasks(Task newTask) {
-        if (newTask.getStartTime() == null || newTask.getDuration() == null) {
+    public void removePrioritizedTask(Task task) {
+        prioritizedTasks.remove(task);
+    }
+
+    public List<Task> getPrioritizedTasks() {
+        return List.copyOf(prioritizedTasks);
+    }
+
+    public boolean isIntersectionTasks(Task newTask) {
+        if (newTask.getStartTime() == null) {
             throw new TaskIntersectionException("В задаче отсутствует время начала или окончания.");
         }
 
         newTask.getEndTime(newTask.getStartTime(), newTask.getDuration());
 
-        if (historyManager.isIntersectionTasks(newTask)) {
-            throw new TaskIntersectionException(
-                    "Задача \"" + newTask.getName() + "\" пересекается по времени с другой задачей!");
-        }
+        return getPrioritizedTasks().stream()
+                .anyMatch(prioritizedTask -> {
+                    LocalDateTime startTime = prioritizedTask.getStartTime();
+                    LocalDateTime endTime = prioritizedTask.getEndTime();
+                    return newTask.getStartTime().isBefore(endTime) &&
+                            newTask.getEndTime().isAfter(startTime);
+                });
     }
 
-    private void getIsIntersectionTasks(Task updTask, int idAddedTask) {
-        if (updTask.getStartTime() == null) {
+    public boolean isIntersectionTasks(Task newTask, int idAddedTask) {
+        if (newTask.getStartTime() == null) {
             throw new TaskIntersectionException("В задаче отсутствует время начала или окончания.");
         }
 
-        updTask.getEndTime(updTask.getStartTime(), updTask.getDuration());
+        newTask.getEndTime(newTask.getStartTime(), newTask.getDuration());
 
-        if (historyManager.isIntersectionTasks(updTask, idAddedTask)) {
-            throw new TaskIntersectionException(
-                    "Задача \"" + updTask.getName() + "\" пересекается по времени с другой задачей!");
+        return getPrioritizedTasks().stream()
+                .filter(task -> task.getId() != idAddedTask)
+                .anyMatch(prioritizedTask -> {
+                    LocalDateTime startTime = prioritizedTask.getStartTime();
+                    LocalDateTime endTime = prioritizedTask.getEndTime();
+                    return newTask.getStartTime().isBefore(endTime) &&
+                            newTask.getEndTime().isAfter(startTime);
+                });
+    }
+
+    private static final Comparator<Task> taskComparator = (o1, o2) -> {
+        if (!o1.getStartTime().equals(o2.getStartTime())) {
+            return o1.getStartTime().compareTo(o2.getStartTime());
         }
-    }
 
-    protected InMemoryHistoryManager getHistoryManager() {
-        return (InMemoryHistoryManager) historyManager;
-    }
+        return Integer.compare(o1.getId(), o2.getId());
+    };
 }

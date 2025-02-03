@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
-    private static InMemoryHistoryManager historyManager;
     private static final String HISTORY_DIR = "src/history";
     private static final String AUTO_SAVE_FILE = "autoSave.csv";
     private final File autoSaveFile;
@@ -52,7 +51,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
 
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(file);
-        historyManager = fileBackedTaskManager.getHistoryManager();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             while (bufferedReader.ready()) {
@@ -152,7 +150,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void addNewTaskWithId(Task task) {
         task.getEndTime(task.getStartTime(), task.getDuration());
         tasks.put(task.getId(), task);
-        historyManager.addToPrioritizedTasks(task);
+        addToPrioritizedTasks(task);
 
         if (task.getId() >= idCounter) {
             idCounter = task.getId() + 1;
@@ -177,7 +175,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         subtask.getEndTime(subtask.getStartTime(), subtask.getDuration());
         subtasks.put(subtaskId, subtask);
-        historyManager.addToPrioritizedTasks(subtask);
+        addToPrioritizedTasks(subtask);
         epic.addSubtaskId(subtaskId);
         updateEpicStatus(epic);
 
