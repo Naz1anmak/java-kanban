@@ -28,18 +28,23 @@ class InMemoryHistoryManagerTest {
         task = new Task("Первая", "Описание 1", TaskStatus.NEW,
                 LocalDateTime.of(2025, Month.JANUARY, 1, 13, 0), Duration.ofMinutes(120));
         epic = new Epic("Первый эпик", "Описание 1");
-        subtask = new Subtask(epic.getId(),
+        subtask = new Subtask(-1,
                 "Первая подзадача", "Описание 1", TaskStatus.NEW,
                 LocalDateTime.of(2025, Month.MARCH, 1, 12, 0), Duration.ofMinutes(120));
 
         int taskId = taskManager.addNewTask(task);
         int epicId = taskManager.addNewEpic(epic);
-        subtask.setIdEpic(epicId);
+        subtask = new Subtask(epicId,
+                "Первая подзадача", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.MARCH, 1, 12, 0), Duration.ofMinutes(120));
         int subtaskId = taskManager.addNewSubtask(subtask);
 
-        task.setId(taskId);
-        epic.setId(epicId);
-        subtask.setId(subtaskId);
+        task = new Task(taskId, "Первая", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 13, 0), Duration.ofMinutes(120));
+        epic = new Epic(epicId, "Первый эпик", "Описание 1");
+        subtask = new Subtask(subtaskId, epicId,
+                "Первая подзадача", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.MARCH, 1, 12, 0), Duration.ofMinutes(120));
 
         historyManager.add(task);
         historyManager.add(epic);

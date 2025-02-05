@@ -60,28 +60,28 @@ public class Main {
         taskManager.addNewSubtask(new Subtask(taskManager.getEpics().getLast().getId(),
                 "Третья саб-таска", "Описание3", TaskStatus.NEW,
                 LocalDateTime.of(2025, Month.MARCH, 1, 20, 15), Duration.ofMinutes(150)));
-        System.out.println(taskManager.getEpics());
         System.out.println(taskManager.getSubtasks());
 
         System.out.println(" ".repeat(18) + "***  Проверка обновления задачи и вывод  ***");
-        taskManager.updateTask(taskManager.getTasks().getFirst(), new Task(
+        taskManager.updateTask(new Task(taskManager.getTasks().getFirst().getId(),
                 "Четвертая", "Обновленная первая", TaskStatus.DONE,
                 LocalDateTime.of(2025, Month.JANUARY, 1, 16, 45), Duration.ofMinutes(180)));
         System.out.println(taskManager.getTasks());
 
         System.out.println(" ".repeat(18) + "***  Проверка обновления саб-задачи  ***");
         System.out.println(taskManager.getEpicSubtasks(taskManager.getEpics().getFirst().getId()));
-        taskManager.updateSubtask(taskManager.getSubtasks().getFirst(), new Subtask(
-                taskManager.getSubtasks().getFirst().getIdEpic(),
+        taskManager.updateSubtask(new Subtask(
+                taskManager.getEpics().getFirst().getSubtaskIds().getFirst(),
+                taskManager.getEpics().getFirst().getId(),
                 "Четвертая саб-таска", "Обновленная первая", TaskStatus.DONE,
                 LocalDateTime.of(2025, Month.MARCH, 1, 11, 50), Duration.ofMinutes(60)));
         System.out.println(taskManager.getEpicSubtasks(taskManager.getEpics().getFirst().getId()));
 
         System.out.println(" ".repeat(18) + "***  Проверка обновления эпика и вывод  ***");
-        System.out.println(taskManager.getEpics());
-        taskManager.updateEpicFill(taskManager.getEpics().getFirst(),
-                new Epic("Четвертый", "Обновленный первый"));
-        System.out.println(taskManager.getEpics());
+        System.out.println(taskManager.getEpics().getFirst());
+        taskManager.updateEpicFill(
+                new Epic(taskManager.getEpics().getFirst().getId(), "Четвертый", "Обновленный первый"));
+        System.out.println(taskManager.getEpics().getFirst());
 
         System.out.println(" ".repeat(18) + "***  Проверка удаления задачи  ***");
         taskManager.deleteTaskById(taskManager.getTasks().getFirst().getId());
@@ -107,7 +107,7 @@ public class Main {
                 LocalDateTime.of(2025, Month.JANUARY, 3, 16, 30), Duration.ofMinutes(240)));
         int idEpic1 = taskManager.addNewEpic(new Epic("Первый эпик", "Описание 3"));
         int idSubtask1 = taskManager.addNewSubtask(new Subtask(idEpic1,
-                "Первая саб-таска", "Описание4", TaskStatus.NEW,
+                "Первая саб-таска", "Описание4", TaskStatus.IN_PROGRESS,
                 LocalDateTime.of(2025, Month.MARCH, 1, 11, 50), Duration.ofMinutes(60)));
 
         taskManager.getTask(idTask1);
@@ -151,10 +151,11 @@ public class Main {
                 "Третья саб-таска", "Описание3", TaskStatus.NEW,
                 LocalDateTime.of(2025, Month.MARCH, 1, 20, 15), Duration.ofMinutes(150)));
 
-        fileBackedTaskManager.updateTask(fileBackedTaskManager.getTasks().getFirst(), new Task(
+        fileBackedTaskManager.updateTask(new Task(fileBackedTaskManager.getTasks().getFirst().getId(),
                 "Четвертая", "Обновленная первая", TaskStatus.DONE,
                 LocalDateTime.of(2025, Month.JANUARY, 1, 16, 45), Duration.ofMinutes(180)));
-        fileBackedTaskManager.updateSubtask(fileBackedTaskManager.getSubtasks().getLast(), new Subtask(
+        fileBackedTaskManager.updateSubtask(new Subtask(
+                fileBackedTaskManager.getEpics().getLast().getSubtaskIds().getLast(),
                 fileBackedTaskManager.getEpics().getLast().getId(),
                 "Третья саб-таска", "Обновленная3", TaskStatus.IN_PROGRESS,
                 LocalDateTime.of(2025, Month.MARCH, 1, 20, 15), Duration.ofMinutes(150)));
@@ -178,13 +179,14 @@ public class Main {
         System.out.println(fileBackedTaskManager.getEpics());
         System.out.println(fileBackedTaskManager.getSubtasks());
 
-        fileBackedTaskManager.updateTask(fileBackedTaskManager.getTasks().getFirst(), new Task(
+        fileBackedTaskManager.updateTask(new Task(fileBackedTaskManager.getTasks().getFirst().getId(),
                 "Снова первая", "Обновленная 4", TaskStatus.DONE,
                 LocalDateTime.of(2025, Month.JANUARY, 1, 9, 45), Duration.ofMinutes(180)));
 
-        fileBackedTaskManager.updateSubtask(fileBackedTaskManager.getSubtasks().getFirst(), new Subtask(
-                fileBackedTaskManager.getEpics().getLast().getId(),
-                "Пятая саб-таска", "Описание3", TaskStatus.NEW,
+        fileBackedTaskManager.updateSubtask(new Subtask(
+                fileBackedTaskManager.getEpics().getFirst().getSubtaskIds().getLast(),
+                fileBackedTaskManager.getEpics().getFirst().getId(),
+                "Пятая саб-таска", "Описание3", TaskStatus.DONE,
                 LocalDateTime.of(2025, Month.MARCH, 1, 23, 15), Duration.ofMinutes(150)));
 
         System.out.println(fileBackedTaskManager.getTasks());

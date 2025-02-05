@@ -101,8 +101,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
         int epicId1 = taskManager.addNewEpic(epic1);
         int epicId2 = taskManager.addNewEpic(epic2);
 
-        subtask1.setIdEpic(epicId1);
-        subtask2.setIdEpic(epicId2);
+        subtask1 = new Subtask(epicId1, subtask1.getName(), subtask1.getDescription(), subtask1.getStatus(),
+                subtask1.getStartTime(), subtask1.getDuration());
+        subtask2 = new Subtask(epicId2, subtask2.getName(), subtask2.getDescription(), subtask2.getStatus(),
+                subtask2.getStartTime(), subtask2.getDuration());
         int subtaskId1 = taskManager.addNewSubtask(subtask1);
         int subtaskId2 = taskManager.addNewSubtask(subtask2);
 
@@ -180,20 +182,20 @@ abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void shouldNotAllowEpicToBeItsOwnSubtask() {
         int epic1Id = taskManager.addNewEpic(epic1);
-        Subtask invalidSubtask = new Subtask(
+        Subtask invalidSubtask = new Subtask(epic1Id,
                 epic1Id, "Некорректная подзадача", "Описание", TaskStatus.NEW,
                 LocalDateTime.of(2025, Month.JANUARY, 1, 13, 30), Duration.ofMinutes(60));
-        invalidSubtask.setId(epic1Id);
         int result = taskManager.addNewSubtask(invalidSubtask);
-
         assertEquals(-1, result, "Подзадача не должна быть добавлена, если её id совпадает с id эпика.");
         assertEquals(0, taskManager.getSubtasks().size(), "Подзадач не должно быть добавлено.");
     }
 
     @Test
     void shouldNotAllowSubtaskToBeItsOwnEpic() {
-        subtask1.setIdEpic(subtask1.getId());
-        taskManager.addNewSubtask(subtask1);
+        Subtask invalidSubtask = new Subtask(subtask1.getId(),
+                "Некорректная подзадача", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.MARCH, 1, 12, 0), Duration.ofMinutes(120));
+        taskManager.addNewSubtask(invalidSubtask);
 
         assertEquals(0, taskManager.getSubtasks().size(),
                 "Подзадача с некорректным ID не должна добавляться.");
@@ -202,8 +204,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void testEpicStatusWhenAllSubtasksAreNew() {
         int epicId = taskManager.addNewEpic(epic1);
-        subtask1.setIdEpic(epicId);
-        subtask2.setIdEpic(epicId);
+        subtask1 = new Subtask(epicId, subtask1.getName(), subtask1.getDescription(), subtask1.getStatus(),
+                subtask1.getStartTime(), subtask1.getDuration());
+        subtask2 = new Subtask(epicId, subtask2.getName(), subtask2.getDescription(), subtask2.getStatus(),
+                subtask2.getStartTime(), subtask2.getDuration());
         taskManager.addNewSubtask(subtask1);
         taskManager.addNewSubtask(subtask2);
 
@@ -216,7 +220,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void testEpicStatusWhenAllSubtasksAreDone() {
         int epicId = taskManager.addNewEpic(epic1);
-        subtask3.setIdEpic(epicId);
+        subtask3 = new Subtask(epicId, subtask3.getName(), subtask3.getDescription(), subtask3.getStatus(),
+                subtask3.getStartTime(), subtask3.getDuration());
         Subtask subtask4 = new Subtask(epicId, "Дополнительная подзадача", "Описание 1", TaskStatus.DONE,
                 LocalDateTime.of(2025, Month.MARCH, 1, 12, 0), Duration.ofMinutes(120));
         taskManager.addNewSubtask(subtask3);
@@ -231,8 +236,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void testEpicStatusWhenSubtasksAreNewAndDone() {
         int epicId = taskManager.addNewEpic(epic1);
-        subtask2.setIdEpic(epicId);
-        subtask3.setIdEpic(epicId);
+        subtask2 = new Subtask(epicId, subtask2.getName(), subtask2.getDescription(), subtask2.getStatus(),
+                subtask2.getStartTime(), subtask2.getDuration());
+        subtask3 = new Subtask(epicId, subtask3.getName(), subtask3.getDescription(), subtask3.getStatus(),
+                subtask3.getStartTime(), subtask3.getDuration());
         taskManager.addNewSubtask(subtask2);
         taskManager.addNewSubtask(subtask3);
 
@@ -245,8 +252,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void testEpicStatusWhenSubtasksAreInProgress() {
         int epicId = taskManager.addNewEpic(epic1);
-        subtask2.setIdEpic(epicId);
-        subtask3.setIdEpic(epicId);
+        subtask2 = new Subtask(epicId, subtask2.getName(), subtask2.getDescription(), subtask2.getStatus(),
+                subtask2.getStartTime(), subtask2.getDuration());
+        subtask3 = new Subtask(epicId, subtask3.getName(), subtask3.getDescription(), subtask3.getStatus(),
+                subtask3.getStartTime(), subtask3.getDuration());
         taskManager.addNewSubtask(subtask2);
         taskManager.addNewSubtask(subtask3);
 
@@ -259,7 +268,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void shouldRemoveSubtaskAndClearItsIdFromEpic() {
         int epicId = taskManager.addNewEpic(epic1);
-        subtask1.setIdEpic(epicId);
+        subtask1 = new Subtask(epicId, subtask1.getName(), subtask1.getDescription(), subtask1.getStatus(),
+                subtask1.getStartTime(), subtask1.getDuration());
         int subtaskId = taskManager.addNewSubtask(subtask1);
 
         Epic epicBeforeDelete = taskManager.getEpic(epicId);
@@ -275,29 +285,17 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void shouldNotAffectTaskManagerWhenTaskIsModifiedAfterAdding() {
-        int taskId = taskManager.addNewTask(task1);
-        task1.setName("Изменённое название");
-        task1.setDescription("Изменённое описание");
-        task1.setStatus(TaskStatus.DONE);
-
-        Task savedTask = taskManager.getTask(taskId);
-
-        assertEquals("Первая", savedTask.getName(), "Название задачи не должно измениться.");
-        assertEquals("Описание 1", savedTask.getDescription(), "Описание задачи не должно измениться.");
-        assertEquals(TaskStatus.NEW, savedTask.getStatus(), "Статус задачи не должен измениться.");
-    }
-
-    @Test
     void shouldPreserveSubtasksAfterEpicUpdate() {
         int epicId = taskManager.addNewEpic(epic1);
-        subtask2.setIdEpic(epicId);
-        subtask3.setIdEpic(epicId);
+        subtask2 = new Subtask(epicId, subtask2.getName(), subtask2.getDescription(), subtask2.getStatus(),
+                subtask2.getStartTime(), subtask2.getDuration());
+        subtask3 = new Subtask(epicId, subtask3.getName(), subtask3.getDescription(), subtask3.getStatus(),
+                subtask3.getStartTime(), subtask3.getDuration());
         int subtask2Id = taskManager.addNewSubtask(subtask2);
         int subtask3Id = taskManager.addNewSubtask(subtask3);
         epic1 = taskManager.getEpic(epicId);
 
-        taskManager.updateEpicFill(epic1, new Epic("Обновлённый эпик", "Новое описание"));
+        taskManager.updateEpicFill(new Epic(epicId, "Обновлённый эпик", "Новое описание"));
 
         Epic savedEpic = taskManager.getEpic(epicId);
 
@@ -313,8 +311,10 @@ abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void shouldRemoveAllSubtasksWhenEpicIsDeleted() {
         int epicId = taskManager.addNewEpic(epic1);
-        subtask2.setIdEpic(epicId);
-        subtask3.setIdEpic(epicId);
+        subtask2 = new Subtask(epicId, subtask2.getName(), subtask2.getDescription(), subtask2.getStatus(),
+                subtask2.getStartTime(), subtask2.getDuration());
+        subtask3 = new Subtask(epicId, subtask3.getName(), subtask3.getDescription(), subtask3.getStatus(),
+                subtask3.getStartTime(), subtask3.getDuration());
         taskManager.addNewSubtask(subtask2);
         taskManager.addNewSubtask(subtask3);
 

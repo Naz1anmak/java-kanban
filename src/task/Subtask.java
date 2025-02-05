@@ -5,8 +5,8 @@ import history.TasksTypes;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-public class Subtask extends Task {
-    private int idEpic;
+public final class Subtask extends Task {
+    private final int idEpic;
 
     public Subtask(int idEpic, String name, String description, TaskStatus status,
                    LocalDateTime startTime, Duration duration) {
@@ -14,12 +14,14 @@ public class Subtask extends Task {
         this.idEpic = idEpic;
     }
 
-    public int getIdEpic() {
-        return idEpic;
+    public Subtask(int id, int idEpic, String name, String description, TaskStatus status,
+                   LocalDateTime startTime, Duration duration) {
+        super(id, name, description, status, startTime, duration);
+        this.idEpic = idEpic;
     }
 
-    public void setIdEpic(int newIdEpic) {
-        this.idEpic = newIdEpic;
+    public int getIdEpic() {
+        return idEpic;
     }
 
     @Override

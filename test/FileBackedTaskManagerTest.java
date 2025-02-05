@@ -69,7 +69,9 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
                 "Третья подзадача", "Описание 3", TaskStatus.DONE,
                 LocalDateTime.of(2025, Month.MARCH, 1, 20, 15), Duration.ofMinutes(150));
 
-        updatedTask = new Task("Изменённое название", "Описание 1", TaskStatus.DONE,
+        updatedTask = new Task(-1,
+                "Изменённое название", "Описание 1",
+                TaskStatus.DONE,
                 LocalDateTime.of(2025, Month.JANUARY, 1, 13, 0), Duration.ofMinutes(120));
     }
 
@@ -99,21 +101,32 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         int epic1Id = fileBackedTaskManager.addNewEpic(epic1);
         int epic2Id = fileBackedTaskManager.addNewEpic(epic2);
 
-        task1.setId(task1Id);
-        task2.setId(task2Id);
-        subtask1.setIdEpic(epic1Id);
-        subtask2.setIdEpic(epic2Id);
-        subtask3.setIdEpic(epic2Id);
+        task1 = new Task(task1Id, task1.getName(), task1.getDescription(), task1.getStatus(), task1.getStartTime(),
+                task1.getDuration());
+        task2 = new Task(task2Id, task2.getName(), task2.getDescription(), task2.getStatus(), task2.getStartTime(),
+                task2.getDuration());
+        subtask1 = new Subtask(epic1Id, subtask1.getName(), subtask1.getDescription(), subtask1.getStatus(),
+                subtask1.getStartTime(), subtask1.getDuration());
+        subtask2 = new Subtask(epic2Id, subtask2.getName(), subtask2.getDescription(), subtask2.getStatus(),
+                subtask2.getStartTime(), subtask2.getDuration());
+        subtask3 = new Subtask(epic2Id, subtask3.getName(), subtask3.getDescription(), subtask3.getStatus(),
+                subtask3.getStartTime(), subtask3.getDuration());
 
         fileBackedTaskManager.addNewSubtask(subtask1);
         int subtask2Id = fileBackedTaskManager.addNewSubtask(subtask2);
         int subtask3Id = fileBackedTaskManager.addNewSubtask(subtask3);
 
-        subtask2.setId(subtask2Id);
-        subtask3.setId(subtask3Id);
+        subtask2 = new Subtask(subtask2Id, epic2Id, subtask2.getName(), subtask2.getDescription(), subtask2.getStatus(),
+                subtask2.getStartTime(), subtask2.getDuration());
+        subtask3 = new Subtask(subtask3Id, epic2Id, subtask3.getName(), subtask3.getDescription(), subtask3.getStatus(),
+                subtask3.getStartTime(), subtask3.getDuration());
         epic2 = fileBackedTaskManager.getEpic(epic2Id);
 
-        fileBackedTaskManager.updateTask(task1, updatedTask);
+        updatedTask = new Task(task1Id,
+                "Изменённое название", "Описание 1",
+                TaskStatus.DONE,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 13, 0), Duration.ofMinutes(120));
+        fileBackedTaskManager.updateTask(updatedTask);
 
         fileBackedTaskManager.deleteTaskById(fileBackedTaskManager.getTasks().getLast().getId());
         fileBackedTaskManager.deleteEpicById(fileBackedTaskManager.getEpics().getFirst().getId());
@@ -121,7 +134,8 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         task3 = new Task("Третья", "Описание 3", TaskStatus.DONE,
                 LocalDateTime.of(2025, Month.JANUARY, 1, 10, 0), Duration.ofMinutes(180));
         int task3Id = fileBackedTaskManager.addNewTask(task3);
-        task3.setId(task3Id);
+        task3 = new Task(task3Id, "Третья", "Описание 3", TaskStatus.DONE,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 10, 0), Duration.ofMinutes(180));
     }
 
     @Test
