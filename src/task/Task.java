@@ -2,68 +2,60 @@ package task;
 
 import history.TasksTypes;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
-    private String name;
-    private String description;
-    private int id;
+    private final String name;
+    private final String description;
+    private final int id;
     protected TaskStatus status;
+    private final LocalDateTime startTime;
+    private final Duration duration;
+    private final LocalDateTime endTime;
 
-    public Task(int id, String name, String description, TaskStatus status) {
-        this.name = name;
-        this.description = description;
-        this.id = id;
-        this.status = status;
+    public Task(String name, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
+        this(-1, name, description, status, startTime, duration);
     }
 
-    public Task(String name, String description, TaskStatus status) {
-        this.name = name;
-        this.description = description;
-        this.status = status;
-    }
-
-    protected Task(int id, String name, String description) {
+    public Task(int id, String name, String description, TaskStatus status,
+                LocalDateTime startTime, Duration duration) {
         this.id = id;
         this.name = name;
         this.description = description;
-    }
-
-    protected Task(String name, String description) {
-        this.name = name;
-        this.description = description;
+        this.status = status;
+        this.startTime = startTime;
+        this.duration = duration;
+        this.endTime = (startTime != null && duration != null) ? startTime.plus(duration) : null;
     }
 
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public TaskStatus getStatus() {
         return status;
     }
 
-    public void setStatus(TaskStatus status) {
-        this.status = status;
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 
     @Override
@@ -81,7 +73,7 @@ public class Task {
 
     @Override
     public String toString() {
-        return String.format("%d,%s,%s,%s,%s",
-                getId(), TasksTypes.TASK, getName(), getStatus(), getDescription());
+        return String.format("%d,%s,%s,%s,%s,%s,%s",
+                getId(), TasksTypes.TASK, getName(), getStatus(), getDescription(), getStartTime(), getDuration());
     }
 }

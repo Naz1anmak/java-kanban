@@ -1,5 +1,6 @@
 import history.HistoryManager;
 import manager.Managers;
+import manager.TaskManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.Epic;
@@ -7,29 +8,43 @@ import task.Subtask;
 import task.Task;
 import task.TaskStatus;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class InMemoryHistoryManagerTest {
     private final HistoryManager historyManager = Managers.getDefaultHistory();
+    private final TaskManager taskManager = Managers.getDefault();
     private Task task;
     private Epic epic;
     private Subtask subtask;
 
     @BeforeEach
     void beforeEach() {
-        task = new Task("Первая", "Описание 1", TaskStatus.NEW);
+        task = new Task("Первая", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 13, 0), Duration.ofMinutes(120));
         epic = new Epic("Первый эпик", "Описание 1");
-        subtask = new Subtask(epic.getId(),
-                "Первая саб-таска", "Описание1", TaskStatus.NEW);
+        subtask = new Subtask(-1,
+                "Первая подзадача", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.MARCH, 1, 12, 0), Duration.ofMinutes(120));
 
-        task.setId(1);
-        epic.setId(2);
-        subtask.setId(3);
+        int taskId = taskManager.addNewTask(task);
+        int epicId = taskManager.addNewEpic(epic);
+        subtask = new Subtask(epicId,
+                "Первая подзадача", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.MARCH, 1, 12, 0), Duration.ofMinutes(120));
+        int subtaskId = taskManager.addNewSubtask(subtask);
 
-        subtask.setIdEpic(epic.getId());
-        epic.addSubtaskId(subtask.getId());
+        task = new Task(taskId, "Первая", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.JANUARY, 1, 13, 0), Duration.ofMinutes(120));
+        epic = new Epic(epicId, "Первый эпик", "Описание 1");
+        subtask = new Subtask(subtaskId, epicId,
+                "Первая подзадача", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.of(2025, Month.MARCH, 1, 12, 0), Duration.ofMinutes(120));
 
         historyManager.add(task);
         historyManager.add(epic);
@@ -61,22 +76,32 @@ class InMemoryHistoryManagerTest {
         historyManager.add(task);
 
         List<Task> history = historyManager.getHistory();
-        assertNotNull(history, "История не пустая.");
-        assertEquals(3, history.size(), "Количество элементов не совпадает.");
-        assertEquals(epic, history.getFirst(), "Первым элементом в истории должен быть Epic.");
+        assertNotNull(history, "История просмотров не должна быть null.");
+        assertEquals(3, history.size(), "История должна содержать три задачи.");
+        assertEquals(task.getName(), history.getLast().getName(),
+                "Последняя просмотренная задача должна быть последней в истории.");
+        assertEquals(epic.getName(), history.getFirst().getName(),
+                "Первая просмотренная задача должна быть первой в истории.");
         assertEquals(subtask, history.get(1), "Вторым элементом в истории должна быть Subtask.");
-        assertEquals(task, history.getLast(), "Третьим элементом в истории должна быть Task.");
     }
 
     @Test
     void shouldCorrectlyDisplayHistoryAfterDeletingTasks() {
-        /* Так как конструктор InMemoryTaskManager менять нельзя, чтобы он принимал экземпляр HistoryManager, делаем
-        вручную то, что делает метод deleteEpicById() */
         historyManager.remove(subtask.getId());
         historyManager.remove(epic.getId());
         List<Task> history = historyManager.getHistory();
-        assertNotNull(history, "История не пустая.");
+        assertNotNull(history, "История просмотров не должна быть null.");
         assertEquals(1, history.size(), "Количество элементов не совпадает.");
         assertEquals(task, history.getFirst(), "Единственным элементом в истории должна быть Task.");
+    }
+
+    @Test
+    void shouldDisplayEmptyHistory() {
+        historyManager.remove(task.getId());
+        historyManager.remove(epic.getId());
+        historyManager.remove(subtask.getId());
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(0, history.size(), "История не пустая.");
     }
 }

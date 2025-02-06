@@ -4,12 +4,16 @@ import history.HistoryManager;
 import history.Node;
 import task.Task;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class InMemoryHistoryManager implements HistoryManager {
     private final DoublyLinkedList<Task> historyList = new DoublyLinkedList<>();
     private final Map<Integer, Node<Task>> historyMap = new HashMap<>();
 
+    @Override
     public void add(Task task) {
         if (task == null) return;
 
@@ -24,7 +28,6 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public void remove(int id) {
         Node<Task> taskNode = historyMap.get(id);
-
         if (taskNode != null) {
             historyList.removeNode(taskNode);
             historyMap.remove(id);
