@@ -1,5 +1,6 @@
 package task;
 
+import com.google.gson.annotations.Expose;
 import history.TasksTypes;
 
 import java.time.Duration;
@@ -7,11 +8,17 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
+    @Expose
     private final String name;
+    @Expose
     private final String description;
+    @Expose
     private final int id;
+    @Expose
     protected TaskStatus status;
+    @Expose
     private final LocalDateTime startTime;
+    @Expose
     private final Duration duration;
     private final LocalDateTime endTime;
 
