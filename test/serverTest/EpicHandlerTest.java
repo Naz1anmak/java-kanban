@@ -1,6 +1,7 @@
 package serverTest;
 
 import com.google.gson.Gson;
+import exception.NotFoundException;
 import manager.InMemoryTaskManager;
 import manager.TaskManager;
 import org.junit.jupiter.api.AfterEach;
@@ -123,8 +124,8 @@ public class EpicHandlerTest {
         HttpResponse<String> response = sendDeleteRequest("http://localhost:8080/epics/" + epicId);
         assertEquals(204, response.statusCode(), "Неверный код ответа при удалении эпика.");
 
-        Epic epic = taskManager.getEpic(epicId);
-        assertNull(epic, "Эпик должен быть null после удаления.");
+        assertThrows(NotFoundException.class, () -> taskManager.getEpic(epicId),
+                "Должно выбрасываться исключение NotFoundException после удаления эпика.");
     }
 
     @Test

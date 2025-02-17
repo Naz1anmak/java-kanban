@@ -3,6 +3,7 @@ package server.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import exception.NotFoundException;
 import exception.TaskIntersectionException;
 import manager.TaskManager;
 import server.HttpTaskServer;
@@ -50,6 +51,8 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                     }
                     sendText(exchange, gson.toJson(epic), 200);
 
+                } catch (NotFoundException e) {
+                    sendText(exchange, e.getMessage(), 404);
                 } catch (IllegalArgumentException e) {
                     sendText(exchange, "Ошибка: неверный путь или идентификатор", 400);
                 }
@@ -78,13 +81,18 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                 break;
 
             case DELETE_EPIC:
-                int idForDelete = extractIdFromPath(path);
-                if (taskManager.getEpic(idForDelete) == null) {
-                    sendNotFound(exchange);
-                    return;
+                try {
+                    int idForDelete = extractIdFromPath(path);
+                    if (taskManager.getEpic(idForDelete) == null) {
+                        sendNotFound(exchange);
+                        return;
+                    }
+                    taskManager.deleteEpicById(idForDelete);
+                    sendText(exchange, "Эпик с Id: " + idForDelete + " успешно удален", 204);
+
+                } catch (NotFoundException e) {
+                    sendText(exchange, e.getMessage(), 404);
                 }
-                taskManager.deleteEpicById(idForDelete);
-                sendText(exchange, "Эпик с Id: " + idForDelete + " успешно удален", 204);
                 break;
 
             default:

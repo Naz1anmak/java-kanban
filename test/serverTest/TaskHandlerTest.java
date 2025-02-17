@@ -1,6 +1,7 @@
 package serverTest;
 
 import com.google.gson.Gson;
+import exception.NotFoundException;
 import manager.InMemoryTaskManager;
 import manager.TaskManager;
 import org.junit.jupiter.api.AfterEach;
@@ -133,9 +134,10 @@ public class TaskHandlerTest {
         HttpResponse<String> response = sendDeleteRequest("http://localhost:8080/tasks/" + taskId);
         assertEquals(204, response.statusCode(), "Неверный код ответа при удалении задачи.");
 
-        Task task = taskManager.getTask(taskId);
-        assertNull(task, "Задача должна быть null после удаления.");
+        assertThrows(NotFoundException.class, () -> taskManager.getTask(taskId),
+                "Должно выбрасываться исключение NotFoundException после удаления задачи.");
     }
+
 
     @Test
     public void testDeleteTaskByIdNotFound() throws IOException, InterruptedException {

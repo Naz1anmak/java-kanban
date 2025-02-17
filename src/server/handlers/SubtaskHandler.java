@@ -3,6 +3,7 @@ package server.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import exception.NotFoundException;
 import exception.TaskIntersectionException;
 import manager.TaskManager;
 import server.HttpTaskServer;
@@ -49,6 +50,8 @@ public class SubtaskHandler extends BaseHttpHandler implements HttpHandler {
                     }
                     sendText(exchange, gson.toJson(subtask), 200);
 
+                } catch (NotFoundException e) {
+                    sendText(exchange, e.getMessage(), 404);
                 } catch (IllegalArgumentException e) {
                     sendText(exchange, "Ошибка: неверный путь или идентификатор", 400);
                 }
@@ -59,13 +62,18 @@ public class SubtaskHandler extends BaseHttpHandler implements HttpHandler {
                 break;
 
             case DELETE_SUBTASK:
-                int idForDelete = extractIdFromPath(path);
-                if (taskManager.getSubtask(idForDelete) == null) {
-                    sendNotFound(exchange);
-                    return;
+                try {
+                    int idForDelete = extractIdFromPath(path);
+                    if (taskManager.getSubtask(idForDelete) == null) {
+                        sendNotFound(exchange);
+                        return;
+                    }
+                    taskManager.deleteSubtaskById(idForDelete);
+                    sendText(exchange, "Подзадача с Id: " + idForDelete + " успешно удалена", 204);
+
+                } catch (NotFoundException e) {
+                    sendText(exchange, e.getMessage(), 404);
                 }
-                taskManager.deleteSubtaskById(idForDelete);
-                sendText(exchange, "Подзадача с Id: " + idForDelete + " успешно удалена", 204);
                 break;
 
             default:

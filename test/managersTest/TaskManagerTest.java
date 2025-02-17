@@ -1,5 +1,6 @@
 package managersTest;
 
+import exception.NotFoundException;
 import exception.TaskIntersectionException;
 import manager.TaskManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,8 +70,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(task1.getName(), tasks.getFirst().getName(), "Название первой задачи не совпадает.");
         assertEquals(task2.getName(), tasks.getLast().getName(), "Название второй задачи не совпадает.");
 
-        Task nonExistentTask = taskManager.getTask(3);
-        assertNull(nonExistentTask, "Задача с несуществующим ID должна быть null.");
+        assertThrows(NotFoundException.class, () -> taskManager.getTask(3),
+                "Должно выбрасываться исключение NotFoundException после удаления задачи.");
     }
 
     @Test
@@ -94,8 +95,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(epic1.getName(), epics.getFirst().getName(), "Название первого эпика не совпадает.");
         assertEquals(epic2.getName(), epics.getLast().getName(), "Название второго эпика не совпадает.");
 
-        Epic nonExistentEpic = taskManager.getEpic(3);
-        assertNull(nonExistentEpic, "Эпик с несуществующим ID должен быть null.");
+        assertThrows(NotFoundException.class, () -> taskManager.getEpic(3),
+                "Должно выбрасываться исключение NotFoundException после удаления эпика.");
     }
 
     @Test
@@ -133,8 +134,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
                 "Первый эпик должен иметь одну подзадачу.");
         assertEquals(subtaskId1, epic.getSubtaskIds().getFirst(), "id подзадачи должно совпадать.");
 
-        Subtask nonExistentSubtask = taskManager.getSubtask(5);
-        assertNull(nonExistentSubtask, "Подзадача с несуществующим ID должна быть null.");
+        assertThrows(NotFoundException.class, () -> taskManager.getSubtask(5),
+                "Должно выбрасываться исключение NotFoundException после удаления подзадачи.");
     }
 
     @Test

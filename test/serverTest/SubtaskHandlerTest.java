@@ -1,6 +1,7 @@
 package serverTest;
 
 import com.google.gson.Gson;
+import exception.NotFoundException;
 import manager.InMemoryTaskManager;
 import manager.TaskManager;
 import org.junit.jupiter.api.AfterEach;
@@ -137,8 +138,8 @@ public class SubtaskHandlerTest {
         HttpResponse<String> response = sendDeleteRequest("http://localhost:8080/subtasks/" + subtaskId);
         assertEquals(204, response.statusCode(), "Неверный код ответа при удалении подзадачи.");
 
-        Subtask subtask = taskManager.getSubtask(subtaskId);
-        assertNull(subtask, "Подзадача должна быть null после удаления.");
+        assertThrows(NotFoundException.class, () -> taskManager.getSubtask(subtaskId),
+                "Должно выбрасываться исключение NotFoundException после удаления подзадачи.");
     }
 
     @Test
