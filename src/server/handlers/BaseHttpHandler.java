@@ -8,24 +8,24 @@ import java.nio.charset.StandardCharsets;
 
 public abstract class BaseHttpHandler {
 
-    protected void sendText(HttpExchange exchange, String response, int statusCode) throws IOException {
+    protected void sendText(HttpExchange exchange, String response, HttpStatusCode statusCode) throws IOException {
         byte[] responseBytes = response.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json; charset=UTF-8");
-        exchange.sendResponseHeaders(statusCode, responseBytes.length);
+        exchange.sendResponseHeaders(statusCode.getCode(), responseBytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(responseBytes);
         }
     }
 
     protected void sendNotFound(HttpExchange exchange) throws IOException {
-        sendText(exchange, "Ошибка: путь не найден", 404);
+        sendText(exchange, "Ошибка: путь не найден", HttpStatusCode.NOT_FOUND);
     }
 
     protected void sendHasInteractions(HttpExchange exchange) throws IOException {
-        sendText(exchange, "Ошибка: задача пересекается с существующими задачами", 406);
+        sendText(exchange, "Ошибка: задача пересекается с существующими задачами", HttpStatusCode.NOT_ACCEPTABLE);
     }
 
     protected void sendIfEmptyList(HttpExchange exchange) throws IOException {
-        exchange.sendResponseHeaders(204, -1);
+        exchange.sendResponseHeaders(HttpStatusCode.NO_CONTENT.getCode(), -1);
     }
 }

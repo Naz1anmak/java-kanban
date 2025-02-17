@@ -73,7 +73,7 @@ public class TaskHandlerTest {
         List<Task> tasks = taskManager.getTasks();
         assertNotNull(tasks, "Список задач не должен быть пуст.");
         assertEquals(1, tasks.size(), "Количество задач должно быть равно 1.");
-        assertEquals("Тестовая задача", tasks.get(0).getName(), "Имя задачи не совпадает.");
+        assertEquals("Тестовая задача", tasks.getFirst().getName(), "Имя задачи не совпадает.");
     }
 
     @Test

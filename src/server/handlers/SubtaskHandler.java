@@ -37,7 +37,7 @@ public class SubtaskHandler extends BaseHttpHandler implements HttpHandler {
                     sendIfEmptyList(exchange);
                     return;
                 }
-                sendText(exchange, gson.toJson(subtasks), 200);
+                sendText(exchange, gson.toJson(subtasks), HttpStatusCode.OK);
                 break;
 
             case GET_SUBTASK_BY_ID:
@@ -48,12 +48,12 @@ public class SubtaskHandler extends BaseHttpHandler implements HttpHandler {
                         sendNotFound(exchange);
                         return;
                     }
-                    sendText(exchange, gson.toJson(subtask), 200);
+                    sendText(exchange, gson.toJson(subtask), HttpStatusCode.OK);
 
-                } catch (NotFoundException e) {
-                    sendText(exchange, e.getMessage(), 404);
-                } catch (IllegalArgumentException e) {
-                    sendText(exchange, "Ошибка: неверный путь или идентификатор", 400);
+                } catch (NotFoundException exception) {
+                    sendText(exchange, exception.getMessage(), HttpStatusCode.NOT_FOUND);
+                } catch (IllegalArgumentException exception) {
+                    sendText(exchange, "Ошибка: неверный путь или идентификатор", HttpStatusCode.BAD_REQUEST);
                 }
                 break;
 
@@ -69,10 +69,10 @@ public class SubtaskHandler extends BaseHttpHandler implements HttpHandler {
                         return;
                     }
                     taskManager.deleteSubtaskById(idForDelete);
-                    sendText(exchange, "Подзадача с Id: " + idForDelete + " успешно удалена", 204);
+                    sendText(exchange, "Подзадача с Id: " + idForDelete + " успешно удалена", HttpStatusCode.NO_CONTENT);
 
-                } catch (NotFoundException e) {
-                    sendText(exchange, e.getMessage(), 404);
+                } catch (NotFoundException exception) {
+                    sendText(exchange, exception.getMessage(), HttpStatusCode.NOT_FOUND);
                 }
                 break;
 
@@ -94,37 +94,37 @@ public class SubtaskHandler extends BaseHttpHandler implements HttpHandler {
                         newSubtask.getStartTime(), newSubtask.getDuration());
             }
 
-        } catch (Exception e) {
-            sendText(exchange, "Ошибка: некорректный формат подзадачи в теле запроса", 400);
+        } catch (Exception exception) {
+            sendText(exchange, "Ошибка: некорректный формат подзадачи в теле запроса", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         if (newSubtask.getId() < -1) {
-            sendText(exchange, "Ошибка: неверный Id подзадачи", 400);
+            sendText(exchange, "Ошибка: неверный Id подзадачи", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         if (taskManager.getEpics().isEmpty()) {
-            sendText(exchange, "Ошибка: Список эпиков пуст", 400);
+            sendText(exchange, "Ошибка: Список эпиков пуст", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         Subtask finalNewSubtask = newSubtask;
         if (newSubtask.getIdEpic() <= 0 || taskManager.getEpics().stream()
                 .filter(epic -> epic.getId() == finalNewSubtask.getIdEpic()).findFirst().isEmpty()) {
-            sendText(exchange, "Ошибка: неверный Id эпика", 400);
+            sendText(exchange, "Ошибка: неверный Id эпика", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         if (newSubtask.getId() > 0 && taskManager.getSubtasks().isEmpty()) {
-            sendText(exchange, "Ошибка: Список подзадач пуст", 400);
+            sendText(exchange, "Ошибка: Список подзадач пуст", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         try {
             if (newSubtask.getId() == -1) {
                 int newSubtaskId = taskManager.addNewSubtask(newSubtask);
-                sendText(exchange, "Подзадача с Id: " + newSubtaskId + " успешно создана", 201);
+                sendText(exchange, "Подзадача с Id: " + newSubtaskId + " успешно создана", HttpStatusCode.CREATED);
                 return;
             }
 
@@ -134,15 +134,15 @@ public class SubtaskHandler extends BaseHttpHandler implements HttpHandler {
 
             if (!list.isEmpty()) {
                 taskManager.updateSubtask(newSubtask);
-                sendText(exchange, "Подзадача с Id: " + newSubtask.getId() + " успешно обновлена", 201);
+                sendText(exchange, "Подзадача с Id: " + newSubtask.getId() + " успешно обновлена", HttpStatusCode.CREATED);
             } else {
                 sendNotFound(exchange);
             }
 
-        } catch (TaskIntersectionException e) {
+        } catch (TaskIntersectionException exception) {
             sendHasInteractions(exchange);
-        } catch (Exception e) {
-            sendText(exchange, "Ошибка: неизвестная ошибка при добавлении подзадачи", 500);
+        } catch (Exception exception) {
+            sendText(exchange, "Ошибка: неизвестная ошибка при добавлении подзадачи", HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 

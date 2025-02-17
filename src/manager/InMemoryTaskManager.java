@@ -83,12 +83,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteTaskById(int id) {
-        Task task = tasks.get(id);
+        Task task = tasks.remove(id);
         if (task == null) {
             throw new NotFoundException("Задача с id " + id + " не найдена.");
         }
 
-        tasks.remove(id);
         historyManager.remove(id);
         removePrioritizedTask(task);
         System.out.println("Задача \"" + task.getName() + "\" удалена!");
@@ -209,13 +208,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteEpicById(int id) {
-        Epic epic = epics.get(id);
+        Epic epic = epics.remove(id);
         if (epic == null) {
             throw new NotFoundException("Задача с id " + id + " не найдена.");
         }
 
         epic.getSubtaskIds().forEach(this::deleteSubtaskById);
-        epics.remove(id);
         historyManager.remove(id);
         System.out.println("Эпик \"" + epic.getName() + "\" и его саб-задачи удалены!");
     }
@@ -337,14 +335,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteSubtaskById(int id) {
-        Subtask subtask = subtasks.get(id);
+        Subtask subtask = subtasks.remove(id);
         if (subtask == null) {
             throw new NotFoundException("Подзадача с id " + id + " не найдена.");
         }
 
         Epic epic = epics.get(subtask.getIdEpic());
         if (epic != null) {
-            subtasks.remove(id);
             historyManager.remove(id);
             removePrioritizedTask(subtask);
             epic.removeSubtaskId(id);

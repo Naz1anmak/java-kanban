@@ -37,7 +37,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                     sendIfEmptyList(exchange);
                     return;
                 }
-                sendText(exchange, gson.toJson(tasks), 200);
+                sendText(exchange, gson.toJson(tasks), HttpStatusCode.OK);
                 break;
 
             case GET_TASK_BY_ID:
@@ -48,12 +48,12 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                         sendNotFound(exchange);
                         return;
                     }
-                    sendText(exchange, gson.toJson(task), 200);
+                    sendText(exchange, gson.toJson(task), HttpStatusCode.OK);
 
-                } catch (NotFoundException e) {
-                    sendText(exchange, e.getMessage(), 404);
-                } catch (IllegalArgumentException e) {
-                    sendText(exchange, "Ошибка: неверный путь или идентификатор", 400);
+                } catch (NotFoundException exception) {
+                    sendText(exchange, exception.getMessage(), HttpStatusCode.NOT_FOUND);
+                } catch (IllegalArgumentException exception) {
+                    sendText(exchange, "Ошибка: неверный путь или идентификатор", HttpStatusCode.BAD_REQUEST);
                 }
                 break;
 
@@ -69,10 +69,10 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                         return;
                     }
                     taskManager.deleteTaskById(idForDelete);
-                    sendText(exchange, "Задача с Id: " + idForDelete + " успешно удалена", 204);
+                    sendText(exchange, "Задача с Id: " + idForDelete + " успешно удалена", HttpStatusCode.NO_CONTENT);
 
-                } catch (NotFoundException e) {
-                    sendText(exchange, e.getMessage(), 404);
+                } catch (NotFoundException exception) {
+                    sendText(exchange, exception.getMessage(), HttpStatusCode.NOT_FOUND);
                 }
                 break;
 
@@ -93,25 +93,25 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                         newTask.getStartTime(), newTask.getDuration());
             }
 
-        } catch (Exception e) {
-            sendText(exchange, "Ошибка: некорректный формат задачи в теле запроса", 400);
+        } catch (Exception exception) {
+            sendText(exchange, "Ошибка: некорректный формат задачи в теле запроса", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         if (newTask.getId() < -1) {
-            sendText(exchange, "Ошибка: неверный Id задачи", 400);
+            sendText(exchange, "Ошибка: неверный Id задачи", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         if (newTask.getId() > 0 && taskManager.getTasks().isEmpty()) {
-            sendText(exchange, "Ошибка: Список задач пуст", 400);
+            sendText(exchange, "Ошибка: Список задач пуст", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         try {
             if (newTask.getId() == -1) {
                 int newTaskId = taskManager.addNewTask(newTask);
-                sendText(exchange, "Задача с Id: " + newTaskId + " успешно создана", 201);
+                sendText(exchange, "Задача с Id: " + newTaskId + " успешно создана", HttpStatusCode.CREATED);
                 return;
             }
 
@@ -122,15 +122,15 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
 
             if (!list.isEmpty()) {
                 taskManager.updateTask(newTask);
-                sendText(exchange, "Задача с Id: " + newTask.getId() + " успешно обновлена", 201);
+                sendText(exchange, "Задача с Id: " + newTask.getId() + " успешно обновлена", HttpStatusCode.CREATED);
             } else {
                 sendNotFound(exchange);
             }
 
-        } catch (TaskIntersectionException e) {
+        } catch (TaskIntersectionException exception) {
             sendHasInteractions(exchange);
-        } catch (Exception e) {
-            sendText(exchange, "Ошибка: неизвестная ошибка при добавлении задачи", 500);
+        } catch (Exception exception) {
+            sendText(exchange, "Ошибка: неизвестная ошибка при добавлении задачи", HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 

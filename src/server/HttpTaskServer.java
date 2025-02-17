@@ -5,10 +5,12 @@ import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import manager.Managers;
 import manager.TaskManager;
 import server.adapters.Adapters;
-import server.handlers.*;
+import server.handlers.EpicHandler;
+import server.handlers.HistoryHandler;
+import server.handlers.SubtaskHandler;
+import server.handlers.TaskHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -18,19 +20,14 @@ import java.time.LocalDateTime;
 
 public class HttpTaskServer {
     private static final int PORT = 8080;
-    private static TaskManager taskManager = null;
-    private static HttpServer httpServer;
+    private final TaskManager taskManager;
+    private HttpServer httpServer;
 
     public HttpTaskServer(TaskManager taskManager) {
-        HttpTaskServer.taskManager = taskManager;
+        this.taskManager = taskManager;
     }
 
-    public static void main(String[] args) throws IOException {
-        new HttpTaskServer(Managers.getDefault());
-        start();
-    }
-
-    public static void start() throws IOException {
+    public void start() throws IOException {
         httpServer = HttpServer.create();
         httpServer.bind(new InetSocketAddress(PORT), 0);
 
@@ -38,8 +35,7 @@ public class HttpTaskServer {
         httpServer.createContext("/subtasks", new SubtaskHandler(taskManager));
         httpServer.createContext("/epics", new EpicHandler(taskManager));
         httpServer.createContext("/history", new HistoryHandler(taskManager));
-        httpServer.createContext("/prioritized", new PrioritizedHandler(taskManager));
-
+        httpServer.createContext("/prioritized", new HistoryHandler(taskManager));
         httpServer.createContext("/", new UnknownPathHandler());
 
         httpServer.start();

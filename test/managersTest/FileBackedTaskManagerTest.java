@@ -92,8 +92,8 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
             String fileContent = Files.readString(file.toPath());
             assertTrue(fileContent.isEmpty(), "Файл должен быть пустым.");
 
-        } catch (IOException e) {
-            fail("Не удалось выполнить тест: " + e.getMessage());
+        } catch (IOException exception) {
+            fail("Не удалось выполнить тест: " + exception.getMessage());
         }
     }
 

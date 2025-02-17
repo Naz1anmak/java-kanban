@@ -38,7 +38,7 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                     sendIfEmptyList(exchange);
                     return;
                 }
-                sendText(exchange, gson.toJson(epics), 200);
+                sendText(exchange, gson.toJson(epics), HttpStatusCode.OK);
                 break;
 
             case GET_EPIC_BY_ID:
@@ -49,12 +49,12 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                         sendNotFound(exchange);
                         return;
                     }
-                    sendText(exchange, gson.toJson(epic), 200);
+                    sendText(exchange, gson.toJson(epic), HttpStatusCode.OK);
 
-                } catch (NotFoundException e) {
-                    sendText(exchange, e.getMessage(), 404);
-                } catch (IllegalArgumentException e) {
-                    sendText(exchange, "Ошибка: неверный путь или идентификатор", 400);
+                } catch (NotFoundException exception) {
+                    sendText(exchange, exception.getMessage(), HttpStatusCode.NOT_FOUND);
+                } catch (IllegalArgumentException exception) {
+                    sendText(exchange, "Ошибка: неверный путь или идентификатор", HttpStatusCode.BAD_REQUEST);
                 }
                 break;
 
@@ -69,10 +69,10 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                         sendNotFound(exchange);
                         return;
                     }
-                    sendText(exchange, gson.toJson(taskManager.getEpicSubtasks(idForGet)), 200);
+                    sendText(exchange, gson.toJson(taskManager.getEpicSubtasks(idForGet)), HttpStatusCode.OK);
 
-                } catch (IllegalArgumentException e) {
-                    sendText(exchange, "Ошибка: неверный путь или идентификатор", 400);
+                } catch (IllegalArgumentException exception) {
+                    sendText(exchange, "Ошибка: неверный путь или идентификатор", HttpStatusCode.BAD_REQUEST);
                 }
                 break;
 
@@ -88,10 +88,10 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                         return;
                     }
                     taskManager.deleteEpicById(idForDelete);
-                    sendText(exchange, "Эпик с Id: " + idForDelete + " успешно удален", 204);
+                    sendText(exchange, "Эпик с Id: " + idForDelete + " успешно удален", HttpStatusCode.NO_CONTENT);
 
-                } catch (NotFoundException e) {
-                    sendText(exchange, e.getMessage(), 404);
+                } catch (NotFoundException exception) {
+                    sendText(exchange, exception.getMessage(), HttpStatusCode.NOT_FOUND);
                 }
                 break;
 
@@ -110,25 +110,25 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                 newEpic = new Epic(newEpic.getId(), newEpic.getName(), newEpic.getDescription());
             }
 
-        } catch (Exception e) {
-            sendText(exchange, "Ошибка: некорректный формат эпика в теле запроса", 400);
+        } catch (Exception exception) {
+            sendText(exchange, "Ошибка: некорректный формат эпика в теле запроса", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         if (newEpic.getId() < -1) {
-            sendText(exchange, "Ошибка: неверный Id эпика", 400);
+            sendText(exchange, "Ошибка: неверный Id эпика", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         if (newEpic.getId() > 0 && taskManager.getEpics().isEmpty()) {
-            sendText(exchange, "Ошибка: Список эпиков пуст", 400);
+            sendText(exchange, "Ошибка: Список эпиков пуст", HttpStatusCode.BAD_REQUEST);
             return;
         }
 
         try {
             if (newEpic.getId() == -1) {
                 int newEpicId = taskManager.addNewEpic(newEpic);
-                sendText(exchange, "Эпик с Id: " + newEpicId + " успешно создан", 201);
+                sendText(exchange, "Эпик с Id: " + newEpicId + " успешно создан", HttpStatusCode.CREATED);
                 return;
             }
 
@@ -139,15 +139,15 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
 
             if (!list.isEmpty()) {
                 taskManager.updateEpicFill(newEpic);
-                sendText(exchange, "Эпик с Id: " + newEpic.getId() + " успешно обновлен", 201);
+                sendText(exchange, "Эпик с Id: " + newEpic.getId() + " успешно обновлен", HttpStatusCode.CREATED);
             } else {
                 sendNotFound(exchange);
             }
 
-        } catch (TaskIntersectionException e) {
+        } catch (TaskIntersectionException exception) {
             sendHasInteractions(exchange);
-        } catch (Exception e) {
-            sendText(exchange, "Ошибка: неизвестная ошибка при добавлении эпика", 500);
+        } catch (Exception exception) {
+            sendText(exchange, "Ошибка: неизвестная ошибка при добавлении эпика", HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 

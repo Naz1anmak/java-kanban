@@ -69,7 +69,7 @@ public class EpicHandlerTest {
         List<Epic> epics = taskManager.getEpics();
         assertNotNull(epics, "Список эпиков не должен быть пуст.");
         assertEquals(1, epics.size(), "Количество эпиков должно быть равно 1.");
-        assertEquals("Тестовый эпик", epics.get(0).getName(), "Имя эпика не совпадает.");
+        assertEquals("Тестовый эпик", epics.getFirst().getName(), "Имя эпика не совпадает.");
     }
 
     @Test

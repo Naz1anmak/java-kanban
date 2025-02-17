@@ -75,7 +75,7 @@ public class SubtaskHandlerTest {
         List<Subtask> subtasks = taskManager.getSubtasks();
         assertNotNull(subtasks, "Список подзадач не должен быть пуст.");
         assertEquals(1, subtasks.size(), "Количество подзадач должно быть равно 1.");
-        assertEquals("Тестовая подзадача", subtasks.get(0).getName(), "Имя подзадачи не совпадает.");
+        assertEquals("Тестовая подзадача", subtasks.getFirst().getName(), "Имя подзадачи не совпадает.");
     }
 
     @Test

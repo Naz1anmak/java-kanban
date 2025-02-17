@@ -76,4 +76,36 @@ public class HistoryHandlerTest {
 
         assertEquals(204, response.statusCode(), "Неверный код ответа при запросе пустой истории.");
     }
+
+    @Test
+    public void testGetPrioritizedTasks() throws IOException, InterruptedException {
+        Task task1 = new Task("Задача 1", "Описание 1", TaskStatus.NEW,
+                LocalDateTime.now().plusHours(2), Duration.ofMinutes(30));
+        Task task2 = new Task("Задача 2", "Описание 2", TaskStatus.NEW,
+                LocalDateTime.now().plusHours(1), Duration.ofMinutes(45));
+        taskManager.addNewTask(task1);
+        taskManager.addNewTask(task2);
+
+        HttpResponse<String> response = client.send(
+                HttpRequest.newBuilder().uri(URI.create("http://localhost:8080/prioritized")).GET().build(),
+                HttpResponse.BodyHandlers.ofString()
+        );
+
+        assertEquals(200, response.statusCode(), "Неверный код ответа при запросе приоритезированных задач.");
+
+        List<Task> prioritizedTasks = gson.fromJson(response.body(), List.class);
+        assertNotNull(prioritizedTasks, "Список приоритезированных задач не должен быть пустым.");
+        assertEquals(2, prioritizedTasks.size(), "Количество приоритезированных задач должно быть равно 2.");
+    }
+
+    @Test
+    public void testGetEmptyPrioritizedTasks() throws IOException, InterruptedException {
+        HttpResponse<String> response = client.send(
+                HttpRequest.newBuilder().uri(URI.create("http://localhost:8080/prioritized")).GET().build(),
+                HttpResponse.BodyHandlers.ofString()
+        );
+
+        assertEquals(204, response.statusCode(), "Неверный код ответа при запросе пустого списка " +
+                "приоритезированных задач.");
+    }
 }

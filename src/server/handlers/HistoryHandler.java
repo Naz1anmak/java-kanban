@@ -1,24 +1,22 @@
 package server.handlers;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import manager.TaskManager;
 import server.HttpTaskServer;
-import server.adapters.Adapters;
 import task.Task;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class HistoryHandler extends BaseHttpHandler implements HttpHandler {
     private final TaskManager taskManager;
+    private final Gson gson;
 
     public HistoryHandler(TaskManager taskManager) {
         this.taskManager = taskManager;
+        this.gson = HttpTaskServer.getGson();
     }
 
     @Override
@@ -27,21 +25,24 @@ public class HistoryHandler extends BaseHttpHandler implements HttpHandler {
         String path = exchange.getRequestURI().getPath();
         Endpoint endpoint = Endpoint.endpointFromMethodAndPath(method, path);
 
-        Gson gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .excludeFieldsWithoutExposeAnnotation()
-                .registerTypeAdapter(LocalDateTime.class, new Adapters.LocalDateTimeAdapter())
-                .registerTypeAdapter(Duration.class, new Adapters.DurationAdapter())
-                .create();
-
-        List<Task> history = taskManager.getHistory();
         switch (endpoint) {
             case GET_HISTORY:
+                List<Task> history = taskManager.getHistory();
                 if (history.isEmpty()) {
                     sendIfEmptyList(exchange);
                     return;
                 }
-                sendText(exchange, gson.toJson(history), 200);
+                sendText(exchange, gson.toJson(history), HttpStatusCode.OK);
+                break;
+
+            case GET_PRIORITIZED:
+                List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+                if (prioritizedTasks.isEmpty()) {
+                    sendIfEmptyList(exchange);
+                    return;
+                }
+
+                sendText(exchange, gson.toJson(prioritizedTasks), HttpStatusCode.OK);
                 break;
 
             default:
