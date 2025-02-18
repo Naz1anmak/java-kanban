@@ -36,7 +36,6 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public List<Task> getHistory() {
-        System.out.println("История просмотров: ");
         return List.copyOf(historyList.getTasks());
     }
 

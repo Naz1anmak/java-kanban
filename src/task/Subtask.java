@@ -1,11 +1,13 @@
 package task;
 
+import com.google.gson.annotations.Expose;
 import history.TasksTypes;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 
 public final class Subtask extends Task {
+    @Expose
     private final int idEpic;
 
     public Subtask(int idEpic, String name, String description, TaskStatus status,
